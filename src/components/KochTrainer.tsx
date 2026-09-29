@@ -11,8 +11,8 @@ import {
   CheckCircle2, 
   ChevronRight, 
   ChevronLeft,
-  Sparkles,
-  Lock
+  Lock,
+  ArrowRight
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -21,7 +21,7 @@ interface KochTrainerProps {
   onStatsUpdate: () => void;
 }
 
-export const KochTrainer: React.FC<KochTrainerProps> = ({ settings, onStatsUpdate }) => {
+export const KochTrainer = ({ settings, onStatsUpdate }: KochTrainerProps) => {
   const [unlockedLevel, setUnlockedLevel] = useState<number>(1);
   const [currentLevel, setCurrentLevel] = useState<number>(1);
   const [lessonGroups, setLessonGroups] = useState<string[]>([]);
@@ -39,6 +39,9 @@ export const KochTrainer: React.FC<KochTrainerProps> = ({ settings, onStatsUpdat
   const inputRef = useRef<HTMLInputElement | null>(null);
   const sessionStartTime = useRef<number>(0);
 
+  const isBrutal = settings.theme === 'neo-brutal';
+  const isDark = settings.theme === 'apple-dark';
+
   // Load progress
   useEffect(() => {
     const stats = StorageService.getStats();
@@ -48,7 +51,7 @@ export const KochTrainer: React.FC<KochTrainerProps> = ({ settings, onStatsUpdat
 
   const activeLesson = KOCH_LESSONS[currentLevel - 1] || KOCH_LESSONS[0];
 
-  // Generate new exercise for this lesson
+  // Generate new exercise
   const generateNewExercise = useCallback(() => {
     audioEngine.stopSequence();
     setIsPlaying(false);
@@ -57,7 +60,7 @@ export const KochTrainer: React.FC<KochTrainerProps> = ({ settings, onStatsUpdat
     setScoreResult(null);
     setUserInput('');
 
-    // 5 groups of 5 characters = 25 characters standard lesson length
+    // 5 groups of 5 characters = 25 characters standard lesson
     const groups = generateRandomGroups(5, activeLesson.allChars);
     setLessonGroups(groups);
   }, [activeLesson.allChars]);
@@ -68,12 +71,10 @@ export const KochTrainer: React.FC<KochTrainerProps> = ({ settings, onStatsUpdat
 
   const targetText = lessonGroups.join(' ');
 
-  // Play single character sample
   const handleHearChar = (char: string) => {
     audioEngine.playSequence(char);
   };
 
-  // Start audio playback
   const handleStartPlayback = async () => {
     if (isPlaying) {
       audioEngine.stopSequence();
@@ -110,7 +111,6 @@ export const KochTrainer: React.FC<KochTrainerProps> = ({ settings, onStatsUpdat
     setCurrentCharIndex(-1);
   };
 
-  // Evaluate user submission
   const handleEvaluate = () => {
     audioEngine.stopSequence();
     setIsPlaying(false);
@@ -155,8 +155,8 @@ export const KochTrainer: React.FC<KochTrainerProps> = ({ settings, onStatsUpdat
 
     if (passed) {
       confetti({
-        particleCount: 80,
-        spread: 70,
+        particleCount: 90,
+        spread: 80,
         origin: { y: 0.6 },
       });
 
@@ -177,30 +177,51 @@ export const KochTrainer: React.FC<KochTrainerProps> = ({ settings, onStatsUpdat
   };
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 p-4">
-      {/* Level Selector Bar */}
-      <div className="rounded-2xl border border-slate-800 bg-[#12141d] p-5 shadow-lg">
-        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-4">
+    <div className="mx-auto max-w-5xl space-y-6">
+      {/* Level Selection Bar */}
+      <div className={`p-6 transition-all ${
+        isBrutal
+          ? 'rounded-3xl border-2 border-neutral-900 bg-white shadow-[4px_4px_0px_0px_#18181b]'
+          : isDark
+          ? 'rounded-3xl border border-white/[0.08] bg-[#141418] shadow-xl'
+          : 'rounded-3xl border border-neutral-200 bg-white shadow-sm'
+      }`}>
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b pb-4 mb-4 border-inherit">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setCurrentLevel((prev) => Math.max(1, prev - 1))}
               disabled={currentLevel === 1}
               aria-label="Previous lesson"
-              className="rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-colors"
+              className={`p-2 rounded-xl transition-all disabled:opacity-30 disabled:pointer-events-none ${
+                isBrutal
+                  ? 'border-2 border-neutral-900 bg-[#f5f4ee] hover:bg-[#ffcc00] shadow-[2px_2px_0px_0px_#18181b] active:translate-x-[1px] active:translate-y-[1px]'
+                  : isDark
+                  ? 'bg-white/[0.05] hover:bg-white/[0.1] text-white'
+                  : 'bg-neutral-100 hover:bg-neutral-200 text-neutral-800'
+              }`}
             >
               <ChevronLeft className="h-5 w-5" />
             </button>
+
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-xs font-mono font-bold uppercase tracking-wider text-amber-400">
-                  Koch Method Curriculum
+                <span className={`text-[11px] font-mono font-black uppercase tracking-wider ${
+                  isBrutal ? 'text-[#ff5500]' : isDark ? 'text-blue-400' : 'text-blue-600'
+                }`}>
+                  The Koch Method
                 </span>
-                <span className="rounded bg-amber-500/10 px-2 py-0.5 text-xs font-bold text-amber-400 border border-amber-500/20">
+                <span className={`text-[10px] font-mono px-2 py-0.5 font-bold rounded-md ${
+                  isBrutal
+                    ? 'bg-neutral-900 text-white'
+                    : isDark
+                    ? 'bg-white/[0.08] text-neutral-300'
+                    : 'bg-neutral-100 text-neutral-700 border border-neutral-200'
+                }`}>
                   Lesson {currentLevel} of 40
                 </span>
               </div>
-              <h2 className="text-xl font-bold text-white mt-0.5">
-                Target Letter: <span className="text-amber-400 font-mono text-2xl ml-1">{activeLesson.newChar}</span>
+              <h2 className="text-xl font-black mt-0.5 tracking-tight">
+                Mastering Letter: <span className="font-mono text-2xl ml-1 text-[#ff5500]">{activeLesson.newChar}</span>
               </h2>
             </div>
           </div>
@@ -210,15 +231,21 @@ export const KochTrainer: React.FC<KochTrainerProps> = ({ settings, onStatsUpdat
               onClick={() => setCurrentLevel((prev) => Math.min(unlockedLevel, prev + 1))}
               disabled={currentLevel >= unlockedLevel || currentLevel === 40}
               aria-label="Next lesson"
-              className="rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-colors"
+              className={`p-2 rounded-xl transition-all disabled:opacity-30 disabled:pointer-events-none ${
+                isBrutal
+                  ? 'border-2 border-neutral-900 bg-[#f5f4ee] hover:bg-[#ffcc00] shadow-[2px_2px_0px_0px_#18181b] active:translate-x-[1px] active:translate-y-[1px]'
+                  : isDark
+                  ? 'bg-white/[0.05] hover:bg-white/[0.1] text-white'
+                  : 'bg-neutral-100 hover:bg-neutral-200 text-neutral-800'
+              }`}
             >
               <ChevronRight className="h-5 w-5" />
             </button>
           </div>
         </div>
 
-        {/* Level Pills Carousel */}
-        <div className="mt-4 flex gap-1.5 overflow-x-auto pb-2 scrollbar-thin">
+        {/* Level Carousel */}
+        <div className="flex gap-2 overflow-x-auto pb-2">
           {KOCH_LESSONS.map((les) => {
             const isUnlocked = les.level <= unlockedLevel;
             const isCurrent = les.level === currentLevel;
@@ -227,17 +254,27 @@ export const KochTrainer: React.FC<KochTrainerProps> = ({ settings, onStatsUpdat
                 key={les.level}
                 onClick={() => isUnlocked && setCurrentLevel(les.level)}
                 disabled={!isUnlocked}
-                className={`flex h-10 min-w-10 flex-col items-center justify-center rounded-xl font-mono text-xs font-bold transition-all ${
+                className={`flex h-11 min-w-11 flex-col items-center justify-center font-mono font-bold transition-all rounded-xl ${
                   isCurrent
-                    ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/30 ring-2 ring-amber-400'
+                    ? isBrutal
+                      ? 'bg-neutral-900 text-white border-2 border-neutral-900 shadow-[3px_3px_0px_0px_#ff5500] scale-105'
+                      : isDark
+                      ? 'bg-white text-neutral-950 font-black shadow-lg scale-105'
+                      : 'bg-neutral-900 text-white shadow-md scale-105'
                     : isUnlocked
-                    ? 'bg-[#181b26] text-slate-300 hover:bg-[#202534] border border-slate-800'
-                    : 'bg-[#0f1118] text-slate-600 border border-slate-900 cursor-not-allowed'
+                    ? isBrutal
+                      ? 'bg-[#f5f4ee] text-neutral-900 border-2 border-neutral-900 hover:bg-[#ffcc00]'
+                      : isDark
+                      ? 'bg-white/[0.04] text-neutral-300 hover:bg-white/[0.08] border border-white/[0.06]'
+                      : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200 border border-neutral-200'
+                    : isBrutal
+                    ? 'bg-neutral-200 text-neutral-400 border-2 border-neutral-300 cursor-not-allowed'
+                    : 'bg-neutral-900/30 text-neutral-600 border border-neutral-800/40 cursor-not-allowed'
                 }`}
               >
-                <span>{les.newChar}</span>
-                <span className="text-[9px] font-normal opacity-70">
-                  {isUnlocked ? les.level : <Lock className="h-2.5 w-2.5 inline" />}
+                <span className="text-xs">{les.newChar}</span>
+                <span className="text-[9px] font-normal opacity-60">
+                  {isUnlocked ? les.level : <Lock className="h-2 w-2 inline" />}
                 </span>
               </button>
             );
@@ -245,129 +282,190 @@ export const KochTrainer: React.FC<KochTrainerProps> = ({ settings, onStatsUpdat
         </div>
       </div>
 
-      {/* Lesson Details & New Character Card */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        {/* Active Character Spotlight */}
-        <div className="rounded-2xl border border-amber-500/30 bg-gradient-to-br from-[#181a26] to-[#12141e] p-6 shadow-xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-4 opacity-10 font-mono text-8xl font-black text-amber-400">
-            {activeLesson.newChar}
-          </div>
-          <span className="text-[11px] font-mono uppercase tracking-wider text-amber-400 font-semibold">
-            Newly Introduced Tone
-          </span>
-          <div className="mt-2 flex items-baseline gap-3">
-            <span className="font-mono text-5xl font-black text-white">{activeLesson.newChar}</span>
-            <span className="font-mono text-2xl font-bold tracking-widest text-amber-400">
-              {MORSE_TABLE[activeLesson.newChar] || ''}
+      {/* Hero Active Character Card & Active Pool */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Spotlight Card */}
+        <div className={`p-6 flex flex-col justify-between relative overflow-hidden transition-all ${
+          isBrutal
+            ? 'rounded-3xl border-2 border-neutral-900 bg-[#ffcc00] text-neutral-900 shadow-[4px_4px_0px_0px_#18181b]'
+            : isDark
+            ? 'rounded-3xl border border-white/[0.08] bg-gradient-to-br from-[#1c1c24] to-[#121217] shadow-xl text-white'
+            : 'rounded-3xl border border-neutral-200 bg-white shadow-sm text-neutral-900'
+        }`}>
+          <div>
+            <span className="text-[11px] font-mono uppercase font-black tracking-wider opacity-80">
+              New Tone Introduced
             </span>
+            <div className="mt-2 flex items-baseline gap-4">
+              <span className="font-mono text-6xl font-black">{activeLesson.newChar}</span>
+              <span className="font-mono text-2xl font-black tracking-widest opacity-80">
+                {MORSE_TABLE[activeLesson.newChar] || ''}
+              </span>
+            </div>
+            <p className="mt-2 text-xs opacity-75 font-medium leading-relaxed">
+              Listen to the acoustic musical pattern at {settings.charWpm} WPM. Never count dots!
+            </p>
           </div>
-          <p className="mt-2 text-xs text-slate-400">
-            Listen to its rhythm as a distinct musical phrase at {settings.charWpm} WPM. Never count dots!
-          </p>
 
           <button
             onClick={() => handleHearChar(activeLesson.newChar)}
-            className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-amber-500/10 border border-amber-500/30 py-2.5 text-xs font-bold text-amber-400 hover:bg-amber-500/20 transition-all shadow-sm"
+            className={`mt-5 flex w-full items-center justify-center gap-2 py-3 px-4 font-bold text-xs rounded-xl transition-all ${
+              isBrutal
+                ? 'bg-neutral-900 text-white border-2 border-neutral-900 shadow-[3px_3px_0px_0px_#18181b] hover:translate-x-[-1px] hover:translate-y-[-1px] active:translate-x-[2px] active:translate-y-[2px]'
+                : isDark
+                ? 'bg-white text-neutral-950 hover:bg-neutral-200 font-semibold shadow-md'
+                : 'bg-neutral-900 text-white hover:bg-neutral-800 shadow-sm'
+            }`}
           >
             <Volume2 className="h-4 w-4" />
-            Play Sound Preview
+            <span>Play Tone Preview</span>
           </button>
         </div>
 
-        {/* Current Active Character Pool */}
-        <div className="md:col-span-2 rounded-2xl border border-slate-800 bg-[#12141d] p-6 shadow-lg flex flex-col justify-between">
+        {/* Active Letter Pool */}
+        <div className={`md:col-span-2 p-6 flex flex-col justify-between transition-all ${
+          isBrutal
+            ? 'rounded-3xl border-2 border-neutral-900 bg-white shadow-[4px_4px_0px_0px_#18181b]'
+            : isDark
+            ? 'rounded-3xl border border-white/[0.08] bg-[#141418] shadow-xl text-white'
+            : 'rounded-3xl border border-neutral-200 bg-white shadow-sm text-neutral-900'
+        }`}>
           <div>
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-mono uppercase tracking-wider text-slate-400 font-semibold">
-                Active Letter Pool ({activeLesson.allChars.length} Characters)
+            <div className="flex items-center justify-between border-b pb-3 mb-3 border-inherit">
+              <span className="text-xs font-mono font-black uppercase tracking-wider opacity-70">
+                Learned Character Pool ({activeLesson.allChars.length} Total)
               </span>
-              <span className="text-xs font-mono text-emerald-400 font-bold">
-                Pass Threshold: 90%
+              <span className={`text-xs font-mono font-bold px-2 py-0.5 rounded-md ${
+                isBrutal ? 'bg-[#ff5500] text-white' : 'bg-emerald-500/10 text-emerald-400 font-semibold'
+              }`}>
+                Goal: ≥ 90%
               </span>
             </div>
-            <div className="mt-3 flex flex-wrap gap-2">
+
+            <div className="flex flex-wrap gap-2">
               {activeLesson.allChars.map((ch) => (
                 <button
                   key={ch}
                   onClick={() => handleHearChar(ch)}
-                  title={`Play ${ch} (${MORSE_TABLE[ch]})`}
-                  className={`flex items-center gap-1 rounded-lg px-2.5 py-1.5 font-mono text-xs font-bold border transition-colors ${
+                  className={`flex items-center gap-1.5 px-3 py-1.5 font-mono text-xs font-bold rounded-xl transition-all ${
                     ch === activeLesson.newChar
-                      ? 'bg-amber-500/10 border-amber-500/40 text-amber-400'
-                      : 'bg-[#181a26] border-slate-800 text-slate-300 hover:border-slate-600'
+                      ? isBrutal
+                        ? 'bg-[#ffcc00] border-2 border-neutral-900 shadow-[2px_2px_0px_0px_#18181b]'
+                        : 'bg-blue-500/20 text-blue-400 border border-blue-500/40'
+                      : isBrutal
+                      ? 'bg-[#f5f4ee] border-2 border-neutral-900 hover:bg-[#ffcc00] shadow-[1px_1px_0px_0px_#18181b]'
+                      : isDark
+                      ? 'bg-white/[0.04] text-neutral-300 hover:bg-white/[0.08] border border-white/[0.08]'
+                      : 'bg-neutral-100 text-neutral-800 hover:bg-neutral-200 border border-neutral-200'
                   }`}
                 >
                   <span>{ch}</span>
-                  <span className="text-[10px] text-slate-500 font-normal">{MORSE_TABLE[ch]}</span>
+                  <span className="text-[10px] opacity-60">{MORSE_TABLE[ch]}</span>
                 </button>
               ))}
             </div>
           </div>
 
-          <div className="mt-4 flex items-center justify-between border-t border-slate-800 pt-3 text-xs text-slate-400 font-mono">
-            <span>Character Cadence: <strong className="text-white">{settings.charWpm} WPM</strong></span>
-            <span>Farnsworth Spacing: <strong className="text-cyan-400">{settings.effectiveWpm} WPM</strong></span>
+          <div className="mt-4 pt-3 border-t border-inherit flex items-center justify-between text-xs font-mono opacity-70">
+            <span>Character Cadence: <strong>{settings.charWpm} WPM</strong></span>
+            <span>Farnsworth Spacing: <strong>{settings.effectiveWpm} WPM</strong></span>
           </div>
         </div>
       </div>
 
-      {/* Practice & Transcription Station */}
-      <div className="rounded-2xl border border-slate-800 bg-[#12141d] p-6 shadow-xl">
-        {/* Playback Controls */}
-        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-5">
+      {/* Transcription Arena */}
+      <div className={`p-8 transition-all ${
+        isBrutal
+          ? 'rounded-3xl border-2 border-neutral-900 bg-white shadow-[6px_6px_0px_0px_#18181b]'
+          : isDark
+          ? 'rounded-3xl border border-white/[0.08] bg-[#141418] shadow-2xl'
+          : 'rounded-3xl border border-neutral-200 bg-white shadow-md'
+      }`}>
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b pb-5 mb-5 border-inherit">
           <div className="flex items-center gap-3">
             {!isPlaying ? (
               <button
                 onClick={handleStartPlayback}
-                className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-6 py-3 font-bold text-slate-950 shadow-lg shadow-amber-500/25 hover:from-amber-400 hover:to-amber-500 transition-all active:scale-95"
+                className={`flex items-center gap-2 px-6 py-3 font-bold text-sm rounded-xl transition-all ${
+                  isBrutal
+                    ? 'bg-[#ff5500] text-white border-2 border-neutral-900 shadow-[3px_3px_0px_0px_#18181b] hover:translate-x-[-1px] hover:translate-y-[-1px] active:translate-x-[2px] active:translate-y-[2px]'
+                    : isDark
+                    ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-600/30'
+                    : 'bg-neutral-900 hover:bg-neutral-800 text-white shadow-md'
+                }`}
               >
-                <Play className="h-5 w-5 fill-current" />
-                <span>Start Audio Stream</span>
+                <Play className="h-4 w-4 fill-current" />
+                <span>Start Audio Transmission</span>
               </button>
             ) : (
               <button
                 onClick={handleStopPlayback}
-                className="flex items-center gap-2 rounded-xl bg-rose-600 px-6 py-3 font-bold text-white shadow-lg shadow-rose-600/25 hover:bg-rose-500 transition-all active:scale-95"
+                className={`flex items-center gap-2 px-6 py-3 font-bold text-sm rounded-xl transition-all ${
+                  isBrutal
+                    ? 'bg-rose-500 text-white border-2 border-neutral-900 shadow-[3px_3px_0px_0px_#18181b]'
+                    : 'bg-rose-600 hover:bg-rose-500 text-white'
+                }`}
               >
-                <Square className="h-5 w-5 fill-current" />
-                <span>Halt Audio</span>
+                <Square className="h-4 w-4 fill-current" />
+                <span>Halt Transmission</span>
               </button>
             )}
 
             <button
               onClick={generateNewExercise}
-              className="flex items-center gap-2 rounded-xl border border-slate-700 bg-[#181a26] px-4 py-3 text-xs font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
+              className={`flex items-center gap-1.5 px-4 py-3 font-bold text-xs rounded-xl transition-all ${
+                isBrutal
+                  ? 'bg-[#f5f4ee] text-neutral-900 border-2 border-neutral-900 shadow-[2px_2px_0px_0px_#18181b] hover:bg-[#ffcc00]'
+                  : isDark
+                  ? 'bg-white/[0.05] text-neutral-300 hover:bg-white/[0.1] border border-white/[0.1]'
+                  : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200 border border-neutral-200'
+              }`}
             >
-              <RotateCcw className="h-4 w-4" />
-              <span>New Groups</span>
+              <RotateCcw className="h-3.5 w-3.5" />
+              <span>Regenerate Groups</span>
             </button>
           </div>
 
-          <div className="font-mono text-xs text-slate-400">
-            Standard: 5 groups of 5 letters (25 total)
+          <div className="font-mono text-xs opacity-60 font-semibold">
+            5 groups × 5 characters = 25 letters
           </div>
         </div>
 
-        {/* Real-time Visual Transmission Display */}
-        <div className="mt-5 rounded-xl border border-slate-800 bg-[#0c0d14] p-5">
-          <div className="text-[11px] font-mono uppercase tracking-wider text-slate-500 mb-2">
-            Target Stream
+        {/* Live Audio Stream Cards */}
+        <div className={`p-6 rounded-2xl mb-6 transition-all ${
+          isBrutal
+            ? 'bg-[#f5f4ee] border-2 border-neutral-900 shadow-[2px_2px_0px_0px_#18181b]'
+            : isDark
+            ? 'bg-[#0d0d11] border border-white/[0.06]'
+            : 'bg-neutral-50 border border-neutral-200'
+        }`}>
+          <div className="text-[10px] font-mono uppercase tracking-wider opacity-60 mb-2 font-bold">
+            Telegraphic Stream
           </div>
-          <div className="flex flex-wrap gap-4 font-mono text-2xl tracking-widest text-slate-300 select-none">
+          <div className="flex flex-wrap gap-4 font-mono text-2xl font-black tracking-widest select-none">
             {lessonGroups.map((group, gIdx) => (
-              <div key={gIdx} className="rounded-lg bg-[#141620] px-3 py-1.5 border border-slate-800">
+              <div
+                key={gIdx}
+                className={`px-3 py-1.5 rounded-xl transition-all ${
+                  isBrutal
+                    ? 'bg-white border-2 border-neutral-900 shadow-[2px_2px_0px_0px_#18181b]'
+                    : isDark
+                    ? 'bg-white/[0.04] border border-white/[0.08]'
+                    : 'bg-white border border-neutral-200'
+                }`}
+              >
                 {group.split('').map((char, cIdx) => {
                   const globalIdx = gIdx * 6 + cIdx;
                   const isCurrent = globalIdx === currentCharIndex;
                   return (
                     <span
                       key={cIdx}
-                      className={`inline-block transition-all ${
+                      className={`inline-block transition-all px-0.5 ${
                         isCurrent
-                          ? 'text-amber-400 scale-125 font-black underline decoration-amber-400 decoration-2'
+                          ? 'text-[#ff5500] scale-125 underline decoration-2'
                           : isFinished
-                          ? 'text-slate-400'
-                          : 'text-slate-200'
+                          ? 'opacity-70'
+                          : 'opacity-90'
                       }`}
                     >
                       {char}
@@ -379,9 +477,9 @@ export const KochTrainer: React.FC<KochTrainerProps> = ({ settings, onStatsUpdat
           </div>
         </div>
 
-        {/* User Input & Scratchpad */}
-        <div className="mt-5">
-          <label className="block text-xs font-mono uppercase tracking-wider text-slate-400 mb-2">
+        {/* Transcription Input Field */}
+        <div>
+          <label className="block text-xs font-mono uppercase tracking-wider font-bold opacity-70 mb-2">
             Transcription Scratchpad (Type what you hear)
           </label>
           <div className="flex gap-3">
@@ -395,52 +493,66 @@ export const KochTrainer: React.FC<KochTrainerProps> = ({ settings, onStatsUpdat
                   handleEvaluate();
                 }
               }}
-              placeholder="Listen and type letters continuously..."
-              className="flex-1 rounded-xl border border-slate-700 bg-[#161824] px-4 py-3 font-mono text-lg tracking-widest text-amber-300 placeholder:text-slate-600 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 uppercase"
+              placeholder="Listen and type characters continuously..."
+              className={`flex-1 px-5 py-3.5 font-mono text-xl font-bold tracking-widest rounded-2xl outline-none uppercase transition-all ${
+                isBrutal
+                  ? 'bg-white text-neutral-900 border-2 border-neutral-900 shadow-[3px_3px_0px_0px_#18181b] focus:border-[#ff5500] focus:shadow-[4px_4px_0px_0px_#ff5500]'
+                  : isDark
+                  ? 'bg-white/[0.04] text-white border border-white/[0.1] focus:border-blue-500 focus:bg-white/[0.06]'
+                  : 'bg-white text-neutral-900 border border-neutral-300 focus:border-blue-600 focus:ring-1 focus:ring-blue-600'
+              }`}
             />
             <button
               onClick={handleEvaluate}
-              className="rounded-xl bg-emerald-600 px-6 py-3 font-bold text-white shadow-lg shadow-emerald-600/20 hover:bg-emerald-500 transition-all active:scale-95 whitespace-nowrap"
+              className={`px-8 py-3.5 font-black text-sm rounded-2xl transition-all whitespace-nowrap ${
+                isBrutal
+                  ? 'bg-[#ffcc00] text-neutral-900 border-2 border-neutral-900 shadow-[3px_3px_0px_0px_#18181b] hover:translate-x-[-1px] hover:translate-y-[-1px] active:translate-x-[2px] active:translate-y-[2px]'
+                  : isDark
+                  ? 'bg-emerald-600 hover:bg-emerald-500 text-white font-semibold shadow-lg'
+                  : 'bg-neutral-900 hover:bg-neutral-800 text-white font-semibold shadow-sm'
+              }`}
             >
               Verify Score
             </button>
           </div>
         </div>
 
-        {/* Score & Evaluation Card */}
+        {/* Evaluation Result Card */}
         {scoreResult && (
-          <div className={`mt-6 rounded-xl border p-5 transition-all ${
-            scoreResult.passed 
-              ? 'border-emerald-500/40 bg-emerald-950/20' 
-              : 'border-rose-500/40 bg-rose-950/20'
+          <div className={`mt-6 p-6 rounded-2xl transition-all ${
+            scoreResult.passed
+              ? isBrutal
+                ? 'border-2 border-neutral-900 bg-[#ffcc00] text-neutral-900 shadow-[4px_4px_0px_0px_#18181b]'
+                : isDark
+                ? 'border border-emerald-500/40 bg-emerald-950/20 text-white'
+                : 'border border-emerald-200 bg-emerald-50 text-emerald-950'
+              : isBrutal
+              ? 'border-2 border-neutral-900 bg-[#f5f4ee] text-neutral-900 shadow-[4px_4px_0px_0px_#18181b]'
+              : isDark
+              ? 'border border-rose-500/40 bg-rose-950/20 text-white'
+              : 'border border-rose-200 bg-rose-50 text-rose-950'
           }`}>
             <div className="flex flex-wrap items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                {scoreResult.passed ? (
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                    <CheckCircle2 className="h-6 w-6" />
-                  </div>
-                ) : (
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-rose-500/20 text-rose-400 border border-rose-500/30">
-                    <RotateCcw className="h-6 w-6" />
-                  </div>
-                )}
+              <div className="flex items-center gap-4">
+                <div className={`h-12 w-12 rounded-xl flex items-center justify-center font-black ${
+                  scoreResult.passed ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white'
+                }`}>
+                  <CheckCircle2 className="h-6 w-6" />
+                </div>
                 <div>
-                  <h3 className="text-lg font-bold text-white">
+                  <h3 className="text-lg font-black tracking-tight">
                     {scoreResult.passed ? 'Lesson Mastered! (≥ 90%)' : 'Needs More Repetition'}
                   </h3>
-                  <p className="text-xs text-slate-400">
-                    Score: {scoreResult.correctChars} / {scoreResult.totalChars} characters correct
+                  <p className="text-xs opacity-75 font-mono">
+                    Correct: {scoreResult.correctChars} / {scoreResult.totalChars} characters
                   </p>
                 </div>
               </div>
 
               <div className="flex items-center gap-4">
                 <div className="text-right">
-                  <span className="text-xs font-mono text-slate-400">Accuracy</span>
-                  <div className={`text-3xl font-black font-mono ${
-                    scoreResult.passed ? 'text-emerald-400' : 'text-rose-400'
-                  }`}>
+                  <span className="text-xs font-mono uppercase opacity-60">Accuracy</span>
+                  <div className="text-3xl font-black font-mono">
                     {scoreResult.accuracy}%
                   </div>
                 </div>
@@ -448,10 +560,14 @@ export const KochTrainer: React.FC<KochTrainerProps> = ({ settings, onStatsUpdat
                 {scoreResult.passed && currentLevel < 40 && (
                   <button
                     onClick={handleNextLevel}
-                    className="flex items-center gap-2 rounded-xl bg-amber-500 px-4 py-2.5 font-bold text-slate-950 hover:bg-amber-400 transition-all shadow-md shadow-amber-500/20"
+                    className={`flex items-center gap-2 px-5 py-3 font-black text-xs rounded-xl transition-all ${
+                      isBrutal
+                        ? 'bg-neutral-900 text-white border-2 border-neutral-900 shadow-[2px_2px_0px_0px_#ff5500] hover:translate-x-[-1px] hover:translate-y-[-1px]'
+                        : 'bg-emerald-500 text-neutral-950 font-bold shadow-md'
+                    }`}
                   >
-                    <Sparkles className="h-4 w-4" />
                     <span>Advance to Lesson {currentLevel + 1}</span>
+                    <ArrowRight className="h-4 w-4" />
                   </button>
                 )}
               </div>

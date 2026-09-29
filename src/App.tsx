@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { PracticeMode, AudioSettings, UserStats } from './types/morse';
+import type { PracticeMode, AudioSettings, UserStats, ThemeMode } from './types/morse';
 import { audioEngine } from './services/audioEngine';
 import { StorageService } from './services/storageService';
 import { Navigation } from './components/Navigation';
@@ -21,6 +21,11 @@ export function App() {
   const [isPlayingAudio, setIsPlayingAudio] = useState<boolean>(false);
   const [isKeyingActive, setIsKeyingActive] = useState<boolean>(false);
   const [showOscilloscope, setShowOscilloscope] = useState<boolean>(true);
+
+  // Sync theme to body class
+  useEffect(() => {
+    document.body.className = `theme-${settings.theme}`;
+  }, [settings.theme]);
 
   // Sync audio engine on load
   useEffect(() => {
@@ -46,8 +51,24 @@ export function App() {
     StorageService.saveSettings(updated);
   };
 
+  const handleThemeChange = (theme: ThemeMode) => {
+    const updated = { ...settings, theme };
+    setSettings(updated);
+    audioEngine.updateSettings({ theme });
+    StorageService.saveSettings(updated);
+  };
+
+  const isBrutal = settings.theme === 'neo-brutal';
+  const isDark = settings.theme === 'apple-dark';
+
   return (
-    <div className="min-h-screen bg-[#090a10] text-slate-100 flex flex-col font-sans selection:bg-amber-500 selection:text-slate-950">
+    <div className={`min-h-screen flex flex-col font-sans transition-colors ${
+      isBrutal
+        ? 'bg-[#f5f4ee] text-neutral-900 selection:bg-[#ff5500] selection:text-white'
+        : isDark
+        ? 'bg-[#09090b] text-slate-100 selection:bg-blue-600 selection:text-white'
+        : 'bg-[#f8fafc] text-neutral-900 selection:bg-blue-600 selection:text-white'
+    }`}>
       {/* Console Top Navigation Bar */}
       <Navigation
         currentMode={currentMode}
@@ -55,32 +76,35 @@ export function App() {
         settings={settings}
         onOpenSettings={() => setIsSettingsOpen(true)}
         onVolumeChange={handleVolumeChange}
+        onThemeChange={handleThemeChange}
         isPlaying={isPlayingAudio}
         isKeyingActive={isKeyingActive}
       />
 
       {/* Main Container */}
-      <main className="flex-1 pb-16 pt-4 px-2 sm:px-4">
+      <main className="flex-1 pb-16 pt-5 px-3 sm:px-6">
         {/* Hardware Oscilloscope Strip */}
-        <div className="mx-auto max-w-5xl px-4 mb-4">
-          <div className="flex items-center justify-between text-[11px] font-mono text-slate-400 mb-1.5">
+        <div className="mx-auto max-w-5xl mb-6">
+          <div className="flex items-center justify-between text-[11px] font-mono opacity-60 mb-2 font-bold">
             <div className="flex items-center gap-2">
-              <span className="inline-block h-2 w-2 rounded-full bg-emerald-400"></span>
-              <span className="font-semibold text-slate-300">REAL-TIME RF / AUDIO SPECTRUM</span>
-              <span className="text-slate-600">//</span>
-              <span className="text-slate-400">{settings.pitch} Hz Sine Carrier</span>
+              <span className={`inline-block h-2 w-2 rounded-full ${
+                isBrutal ? 'bg-[#ff5500]' : 'bg-emerald-500'
+              }`} />
+              <span>CARRIER MONITOR</span>
+              <span>//</span>
+              <span>{settings.pitch} Hz Sine Oscillator</span>
             </div>
             <button
               onClick={() => setShowOscilloscope(!showOscilloscope)}
-              className="text-[10px] text-slate-500 hover:text-slate-300 font-mono underline"
+              className="hover:opacity-100 underline"
             >
-              {showOscilloscope ? 'Collapse Scope' : 'Expand Scope'}
+              {showOscilloscope ? 'Collapse Monitor' : 'Expand Monitor'}
             </button>
           </div>
 
           {showOscilloscope && (
             <Oscilloscope
-              color={isPlayingAudio ? 'amber' : isKeyingActive ? 'green' : 'cyan'}
+              theme={settings.theme}
               height={70}
             />
           )}
@@ -111,25 +135,33 @@ export function App() {
         )}
 
         {currentMode === 'stats' && (
-          <StatsDashboard stats={stats} onRefresh={handleStatsUpdate} />
+          <StatsDashboard stats={stats} theme={settings.theme} onRefresh={handleStatsUpdate} />
         )}
       </main>
 
       {/* Bottom Status & Hardware Footer */}
-      <footer className="border-t border-slate-800/80 bg-[#090b12] py-3 px-4 text-xs font-mono text-slate-400">
-        <div className="mx-auto max-w-7xl flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <Radio className="h-3.5 w-3.5 text-amber-400" />
-            <span>DITDAH CW STATION</span>
-            <span className="text-slate-600">•</span>
-            <span>Target: 20 WPM</span>
-            <span className="text-slate-600">•</span>
-            <span>ASOC Syllabus Compliant</span>
+      <footer className={`border-t py-4 px-4 text-xs font-mono transition-colors ${
+        isBrutal
+          ? 'bg-white border-neutral-900 text-neutral-900 border-t-2'
+          : isDark
+          ? 'bg-[#09090b] border-white/[0.08] text-neutral-400'
+          : 'bg-white border-neutral-200 text-neutral-600'
+      }`}>
+        <div className="mx-auto max-w-6xl flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2 font-bold">
+            <Radio className={`h-4 w-4 ${isBrutal ? 'text-[#ff5500]' : 'text-blue-500'}`} />
+            <span>DITDAH CW ACADEMY</span>
+            <span className="opacity-30">•</span>
+            <span>ASOC 20 WPM</span>
+            <span className="opacity-30">•</span>
+            <span>WPC Indian Syllabus Compliant</span>
           </div>
 
-          <div className="flex items-center gap-4 text-[11px] text-slate-500">
-            <span>Shortcuts: <kbd className="rounded bg-slate-800 px-1 py-0.5 text-slate-300">Space</kbd> Key / <kbd className="rounded bg-slate-800 px-1 py-0.5 text-slate-300">Ctrl+R</kbd> Repeat</span>
-            <span>Web Audio 24-bit 48kHz</span>
+          <div className="flex items-center gap-4 text-[11px] opacity-70">
+            <span>
+              Controls: <kbd className="px-1.5 py-0.5 rounded border border-inherit font-bold">Space</kbd> Key / <kbd className="px-1.5 py-0.5 rounded border border-inherit font-bold">Ctrl+R</kbd> Repeat
+            </span>
+            <span>24-bit 48kHz Web Audio</span>
           </div>
         </div>
       </footer>

@@ -27,7 +27,7 @@ interface CopyTrainerProps {
   onStatsUpdate: () => void;
 }
 
-export const CopyTrainer: React.FC<CopyTrainerProps> = ({ settings, onStatsUpdate }) => {
+export const CopyTrainer = ({ settings, onStatsUpdate }: CopyTrainerProps) => {
   const [sourceType, setSourceType] = useState<CopySourceType>('random-groups');
   const [customText, setCustomText] = useState<string>('CQ CQ CQ DE VU2XYZ PSE K');
   const [currentItem, setCurrentItem] = useState<string>('');
@@ -42,7 +42,9 @@ export const CopyTrainer: React.FC<CopyTrainerProps> = ({ settings, onStatsUpdat
   const inputRef = useRef<HTMLInputElement | null>(null);
   const sessionStartTime = useRef<number>(0);
 
-  // Generate next target text based on selected mode
+  const isBrutal = settings.theme === 'neo-brutal';
+  const isDark = settings.theme === 'apple-dark';
+
   const generateNextTarget = useCallback(() => {
     audioEngine.stopSequence();
     setIsPlaying(false);
@@ -54,7 +56,6 @@ export const CopyTrainer: React.FC<CopyTrainerProps> = ({ settings, onStatsUpdat
     let nextText = '';
     switch (sourceType) {
       case 'random-groups':
-        // Generate two 5-character groups
         nextText = generateRandomGroups(2).join(' ');
         break;
       case 'callsigns':
@@ -83,7 +84,6 @@ export const CopyTrainer: React.FC<CopyTrainerProps> = ({ settings, onStatsUpdat
     generateNextTarget();
   }, [sourceType, generateNextTarget]);
 
-  // Audio Playback
   const handlePlayCurrent = async () => {
     if (!currentItem) return;
 
@@ -113,7 +113,6 @@ export const CopyTrainer: React.FC<CopyTrainerProps> = ({ settings, onStatsUpdat
     );
   };
 
-  // Keyboard shortcut listener (Ctrl+R / F2 to repeat audio)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey && e.key.toLowerCase() === 'r') || e.key === 'F2') {
@@ -125,7 +124,6 @@ export const CopyTrainer: React.FC<CopyTrainerProps> = ({ settings, onStatsUpdat
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [currentItem, isPlaying]);
 
-  // Check user answer
   const handleCheck = () => {
     const cleanTarget = currentItem.replace(/\s+/g, '').toUpperCase();
     const cleanUser = userInput.replace(/\s+/g, '').toUpperCase();
@@ -161,53 +159,73 @@ export const CopyTrainer: React.FC<CopyTrainerProps> = ({ settings, onStatsUpdat
   };
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 p-4">
-      {/* Practice Category Selector */}
-      <div className="rounded-2xl border border-slate-800 bg-[#12141d] p-5 shadow-lg">
-        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-4">
+    <div className="mx-auto max-w-5xl space-y-6">
+      {/* Category Header */}
+      <div className={`p-6 transition-all ${
+        isBrutal
+          ? 'rounded-3xl border-2 border-neutral-900 bg-white shadow-[4px_4px_0px_0px_#18181b]'
+          : isDark
+          ? 'rounded-3xl border border-white/[0.08] bg-[#141418] shadow-xl'
+          : 'rounded-3xl border border-neutral-200 bg-white shadow-sm'
+      }`}>
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b pb-4 mb-4 border-inherit">
           <div>
-            <span className="text-xs font-mono font-bold uppercase tracking-wider text-amber-400">
-              Reception Audio Trainer (RX)
+            <span className={`text-[11px] font-mono font-black uppercase tracking-wider ${
+              isBrutal ? 'text-[#ff5500]' : isDark ? 'text-blue-400' : 'text-blue-600'
+            }`}>
+              Audio Reception Trainer (RX)
             </span>
-            <h2 className="text-xl font-bold text-white mt-0.5">CW Copy Practice</h2>
+            <h2 className="text-xl font-black mt-0.5 tracking-tight">Morse Copy Station</h2>
           </div>
 
-          <div className="flex items-center gap-3 text-xs font-mono text-slate-400">
-            <span>Accuracy: <strong className="text-emerald-400 font-mono text-sm">
+          <div className="flex items-center gap-3 font-mono text-xs font-semibold">
+            <span>Accuracy: <strong className={isBrutal ? 'text-[#ff5500]' : 'text-emerald-500'}>
               {sessionCount > 0 ? Math.round((correctCount / sessionCount) * 100) : 0}%
             </strong></span>
-            <span>Completed: <strong className="text-white font-mono text-sm">{sessionCount}</strong></span>
+            <span>Completed: <strong>{sessionCount}</strong></span>
           </div>
         </div>
 
         {/* Source Mode Tabs */}
-        <div className="mt-4 grid grid-cols-2 sm:grid-cols-5 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
           {[
-            { id: 'random-groups', label: '5-Letter Groups', icon: <Hash className="h-4 w-4" /> },
-            { id: 'callsigns', label: 'Callsigns (VU/DX)', icon: <Radio className="h-4 w-4" /> },
-            { id: 'q-codes', label: 'Q-Codes & CW Slang', icon: <Volume2 className="h-4 w-4" /> },
-            { id: 'words', label: 'Common Words', icon: <FileText className="h-4 w-4" /> },
-            { id: 'custom', label: 'Custom Text', icon: <FileText className="h-4 w-4" /> },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setSourceType(tab.id as CopySourceType)}
-              className={`flex items-center justify-center gap-2 rounded-xl p-3 text-xs font-semibold transition-all ${
-                sourceType === tab.id
-                  ? 'bg-amber-500 text-slate-950 font-bold shadow-md shadow-amber-500/20'
-                  : 'bg-[#181b26] text-slate-400 hover:bg-[#202534] hover:text-white border border-slate-800'
-              }`}
-            >
-              {tab.icon}
-              <span className="truncate">{tab.label}</span>
-            </button>
-          ))}
+            { id: 'random-groups', label: '5-Letter Groups', icon: Hash },
+            { id: 'callsigns', label: 'Ham Callsigns', icon: Radio },
+            { id: 'q-codes', label: 'Q-Codes & Slang', icon: Volume2 },
+            { id: 'words', label: 'Common Words', icon: FileText },
+            { id: 'custom', label: 'Custom Text', icon: FileText },
+          ].map((tab) => {
+            const Icon = tab.icon;
+            const isTabActive = sourceType === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setSourceType(tab.id as CopySourceType)}
+                className={`flex items-center justify-center gap-2 p-3 text-xs font-bold rounded-2xl transition-all ${
+                  isTabActive
+                    ? isBrutal
+                      ? 'bg-neutral-900 text-white border-2 border-neutral-900 shadow-[3px_3px_0px_0px_#ff5500]'
+                      : isDark
+                      ? 'bg-white text-neutral-950 shadow-md font-semibold'
+                      : 'bg-neutral-900 text-white shadow-sm font-semibold'
+                    : isBrutal
+                    ? 'bg-[#f5f4ee] text-neutral-900 border-2 border-neutral-900 hover:bg-[#ffcc00] shadow-[2px_2px_0px_0px_#18181b]'
+                    : isDark
+                    ? 'bg-white/[0.04] text-neutral-300 hover:bg-white/[0.08] border border-white/[0.08]'
+                    : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200 border border-neutral-200'
+                }`}
+              >
+                <Icon className="h-4 w-4" />
+                <span className="truncate">{tab.label}</span>
+              </button>
+            );
+          })}
         </div>
 
-        {/* Custom Text Input if mode is custom */}
+        {/* Custom Text Drawer */}
         {sourceType === 'custom' && (
-          <div className="mt-4 pt-4 border-t border-slate-800">
-            <label className="block text-xs font-mono uppercase text-slate-400 mb-1.5">
+          <div className="mt-4 pt-4 border-t border-inherit">
+            <label className="block text-xs font-mono uppercase font-bold opacity-70 mb-1.5">
               Custom Morse Text to Transmit
             </label>
             <div className="flex gap-2">
@@ -215,88 +233,126 @@ export const CopyTrainer: React.FC<CopyTrainerProps> = ({ settings, onStatsUpdat
                 type="text"
                 value={customText}
                 onChange={(e) => setCustomText(e.target.value.toUpperCase())}
-                placeholder="Enter text to convert to Morse..."
-                className="flex-1 rounded-xl border border-slate-700 bg-[#161824] px-4 py-2 font-mono text-sm text-white focus:border-amber-500 focus:outline-none"
+                placeholder="Enter text..."
+                className={`flex-1 px-4 py-2 font-mono text-sm rounded-xl outline-none uppercase ${
+                  isBrutal
+                    ? 'bg-white border-2 border-neutral-900 shadow-[2px_2px_0px_0px_#18181b]'
+                    : isDark
+                    ? 'bg-white/[0.05] border border-white/[0.1] text-white'
+                    : 'bg-neutral-50 border border-neutral-300'
+                }`}
               />
               <button
                 onClick={generateNextTarget}
-                className="rounded-xl bg-amber-500 px-4 py-2 font-bold text-xs text-slate-950 hover:bg-amber-400"
+                className={`px-4 py-2 font-black text-xs rounded-xl ${
+                  isBrutal ? 'bg-[#ff5500] text-white border-2 border-neutral-900 shadow-[2px_2px_0px_0px_#18181b]' : 'bg-blue-600 text-white'
+                }`}
               >
-                Apply Text
+                Apply
               </button>
             </div>
-            <div className="flex gap-2 mt-2">
-              <button
-                onClick={() => {
-                  const msg = ASOC_PLAIN_MESSAGES[Math.floor(Math.random() * ASOC_PLAIN_MESSAGES.length)];
-                  setCustomText(msg);
-                }}
-                className="text-[11px] text-amber-400/80 hover:text-amber-300 underline font-mono"
-              >
-                + Load ASOC Telegram Message Sample
-              </button>
-            </div>
+            <button
+              onClick={() => {
+                const msg = ASOC_PLAIN_MESSAGES[Math.floor(Math.random() * ASOC_PLAIN_MESSAGES.length)];
+                setCustomText(msg);
+              }}
+              className="text-[11px] font-mono mt-2 underline opacity-70 hover:opacity-100 block"
+            >
+              + Load Sample ASOC Telegraph Message
+            </button>
           </div>
         )}
       </div>
 
-      {/* Audio Playback & Interactive Typing Field */}
-      <div className="rounded-2xl border border-slate-800 bg-[#12141d] p-6 shadow-xl">
-        {/* Playback & Action Controls */}
-        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-5">
+      {/* Copy Arena */}
+      <div className={`p-8 transition-all ${
+        isBrutal
+          ? 'rounded-3xl border-2 border-neutral-900 bg-white shadow-[6px_6px_0px_0px_#18181b]'
+          : isDark
+          ? 'rounded-3xl border border-white/[0.08] bg-[#141418] shadow-2xl'
+          : 'rounded-3xl border border-neutral-200 bg-white shadow-md'
+      }`}>
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b pb-5 mb-5 border-inherit">
           <div className="flex items-center gap-3">
             {!isPlaying ? (
               <button
                 onClick={handlePlayCurrent}
-                className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-6 py-3 font-bold text-slate-950 shadow-lg shadow-amber-500/25 hover:from-amber-400 hover:to-amber-500 transition-all active:scale-95"
+                className={`flex items-center gap-2 px-6 py-3 font-bold text-sm rounded-xl transition-all ${
+                  isBrutal
+                    ? 'bg-[#ff5500] text-white border-2 border-neutral-900 shadow-[3px_3px_0px_0px_#18181b] hover:translate-x-[-1px] hover:translate-y-[-1px] active:translate-x-[2px] active:translate-y-[2px]'
+                    : isDark
+                    ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-600/30'
+                    : 'bg-neutral-900 hover:bg-neutral-800 text-white shadow-md'
+                }`}
               >
-                <Play className="h-5 w-5 fill-current" />
+                <Play className="h-4 w-4 fill-current" />
                 <span>Play Sound (Ctrl+R)</span>
               </button>
             ) : (
               <button
                 onClick={handlePlayCurrent}
-                className="flex items-center gap-2 rounded-xl bg-rose-600 px-6 py-3 font-bold text-white shadow-lg shadow-rose-600/25 hover:bg-rose-500 transition-all active:scale-95"
+                className={`flex items-center gap-2 px-6 py-3 font-bold text-sm rounded-xl transition-all ${
+                  isBrutal
+                    ? 'bg-rose-500 text-white border-2 border-neutral-900 shadow-[3px_3px_0px_0px_#18181b]'
+                    : 'bg-rose-600 hover:bg-rose-500 text-white'
+                }`}
               >
-                <Square className="h-5 w-5 fill-current" />
-                <span>Stop Audio</span>
+                <Square className="h-4 w-4 fill-current" />
+                <span>Halt</span>
               </button>
             )}
 
             <button
               onClick={() => setShowAnswer(!showAnswer)}
-              className="flex items-center gap-2 rounded-xl border border-slate-700 bg-[#181a26] px-4 py-3 text-xs font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
+              className={`flex items-center gap-1.5 px-4 py-3 font-bold text-xs rounded-xl transition-all ${
+                isBrutal
+                  ? 'bg-[#f5f4ee] text-neutral-900 border-2 border-neutral-900 shadow-[2px_2px_0px_0px_#18181b] hover:bg-[#ffcc00]'
+                  : isDark
+                  ? 'bg-white/[0.05] text-neutral-300 hover:bg-white/[0.1] border border-white/[0.1]'
+                  : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200 border border-neutral-200'
+              }`}
             >
               {showAnswer ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              <span>{showAnswer ? 'Hide Text' : 'Peek Answer'}</span>
+              <span>{showAnswer ? 'Hide' : 'Peek'}</span>
             </button>
           </div>
 
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handleNext}
-              className="flex items-center gap-2 rounded-xl bg-[#1e2235] border border-slate-700 px-5 py-3 font-semibold text-xs text-white hover:bg-slate-700 transition-all active:scale-95"
-            >
-              <RotateCcw className="h-4 w-4" />
-              <span>Next Sample</span>
-            </button>
-          </div>
+          <button
+            onClick={handleNext}
+            className={`flex items-center gap-1.5 px-5 py-3 font-bold text-xs rounded-xl transition-all ${
+              isBrutal
+                ? 'bg-[#ffcc00] text-neutral-900 border-2 border-neutral-900 shadow-[2px_2px_0px_0px_#18181b] hover:translate-x-[-1px] hover:translate-y-[-1px]'
+                : isDark
+                ? 'bg-white/[0.08] text-white hover:bg-white/[0.12] border border-white/[0.1]'
+                : 'bg-neutral-100 text-neutral-900 hover:bg-neutral-200 border border-neutral-300'
+            }`}
+          >
+            <RotateCcw className="h-3.5 w-3.5" />
+            <span>Next Sample</span>
+          </button>
         </div>
 
-        {/* Revealed Target Text Display */}
-        <div className="mt-5 rounded-xl border border-slate-800 bg-[#0c0d14] p-5">
-          <div className="flex items-center justify-between text-[11px] font-mono uppercase tracking-wider text-slate-500 mb-2">
+        {/* Revealed / Hidden Text Strip */}
+        <div className={`p-6 rounded-2xl mb-6 transition-all ${
+          isBrutal
+            ? 'bg-[#f5f4ee] border-2 border-neutral-900 shadow-[2px_2px_0px_0px_#18181b]'
+            : isDark
+            ? 'bg-[#0d0d11] border border-white/[0.06]'
+            : 'bg-neutral-50 border border-neutral-200'
+        }`}>
+          <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-wider opacity-60 mb-2 font-bold">
             <span>Transmission Stream</span>
-            {showAnswer && <span className="text-amber-400 font-semibold">Revealed</span>}
+            {showAnswer && <span className="text-[#ff5500]">Revealed</span>}
           </div>
-          <div className="font-mono text-2xl tracking-widest min-h-10 flex items-center">
+
+          <div className="font-mono text-2xl font-black tracking-widest min-h-10 flex items-center">
             {showAnswer ? (
-              <div className="flex flex-wrap gap-2 text-white">
+              <div className="flex flex-wrap gap-2">
                 {currentItem.split('').map((char, idx) => (
                   <span
                     key={idx}
                     className={`transition-colors ${
-                      idx === currentCharIdx ? 'text-amber-400 font-black scale-110 underline' : ''
+                      idx === currentCharIdx ? 'text-[#ff5500] scale-110 underline decoration-2' : ''
                     }`}
                   >
                     {char}
@@ -304,21 +360,21 @@ export const CopyTrainer: React.FC<CopyTrainerProps> = ({ settings, onStatsUpdat
                 ))}
               </div>
             ) : (
-              <div className="flex gap-1.5 text-slate-600 select-none">
+              <div className="flex gap-2 opacity-50 select-none">
                 {currentItem.split('').map((_, i) => (
-                  <span key={i} className="inline-block h-6 w-3 border-b-2 border-slate-700" />
+                  <span key={i} className="inline-block h-6 w-3 border-b-2 border-current" />
                 ))}
-                <span className="text-xs text-slate-500 ml-2 self-center font-sans italic">
-                  (Audio hidden - listen and type below)
+                <span className="text-xs ml-3 self-center font-sans italic opacity-75 font-normal">
+                  (Audio hidden — transcribe below)
                 </span>
               </div>
             )}
           </div>
         </div>
 
-        {/* Copy Scratchpad Input */}
-        <div className="mt-5">
-          <label className="block text-xs font-mono uppercase tracking-wider text-slate-400 mb-2">
+        {/* Input Scratchpad */}
+        <div>
+          <label className="block text-xs font-mono uppercase tracking-wider font-bold opacity-70 mb-2">
             Your Transcription Copy
           </label>
           <div className="flex gap-3">
@@ -333,40 +389,54 @@ export const CopyTrainer: React.FC<CopyTrainerProps> = ({ settings, onStatsUpdat
                 }
               }}
               placeholder="Type what you hear and press Enter..."
-              className="flex-1 rounded-xl border border-slate-700 bg-[#161824] px-4 py-3 font-mono text-lg tracking-widest text-amber-300 placeholder:text-slate-600 focus:border-amber-500 focus:outline-none uppercase"
+              className={`flex-1 px-5 py-3.5 font-mono text-xl font-bold tracking-widest rounded-2xl outline-none uppercase transition-all ${
+                isBrutal
+                  ? 'bg-white text-neutral-900 border-2 border-neutral-900 shadow-[3px_3px_0px_0px_#18181b] focus:border-[#ff5500] focus:shadow-[4px_4px_0px_0px_#ff5500]'
+                  : isDark
+                  ? 'bg-white/[0.04] text-white border border-white/[0.1] focus:border-blue-500 focus:bg-white/[0.06]'
+                  : 'bg-white text-neutral-900 border border-neutral-300 focus:border-blue-600 focus:ring-1 focus:ring-blue-600'
+              }`}
             />
             <button
               onClick={handleCheck}
-              className="rounded-xl bg-blue-600 px-6 py-3 font-bold text-white shadow-lg shadow-blue-600/20 hover:bg-blue-500 transition-all active:scale-95"
+              className={`px-8 py-3.5 font-black text-sm rounded-2xl transition-all whitespace-nowrap ${
+                isBrutal
+                  ? 'bg-[#ffcc00] text-neutral-900 border-2 border-neutral-900 shadow-[3px_3px_0px_0px_#18181b] hover:translate-x-[-1px] hover:translate-y-[-1px] active:translate-x-[2px] active:translate-y-[2px]'
+                  : isDark
+                  ? 'bg-blue-600 hover:bg-blue-500 text-white font-semibold shadow-lg'
+                  : 'bg-neutral-900 hover:bg-neutral-800 text-white font-semibold shadow-sm'
+              }`}
             >
               Verify
             </button>
           </div>
         </div>
 
-        {/* Evaluation Feedback */}
+        {/* Feedback Alert */}
         {feedback && (
-          <div className={`mt-5 rounded-xl border p-4 flex items-center justify-between ${
-            feedback.isCorrect 
-              ? 'border-emerald-500/40 bg-emerald-950/20 text-emerald-300' 
-              : 'border-rose-500/40 bg-rose-950/20 text-rose-300'
+          <div className={`mt-5 p-4 rounded-2xl flex items-center justify-between transition-all ${
+            feedback.isCorrect
+              ? isBrutal
+                ? 'border-2 border-neutral-900 bg-[#ffcc00] text-neutral-900 shadow-[3px_3px_0px_0px_#18181b]'
+                : 'border border-emerald-500/40 bg-emerald-950/20 text-emerald-300'
+              : isBrutal
+              ? 'border-2 border-neutral-900 bg-rose-200 text-neutral-900 shadow-[3px_3px_0px_0px_#18181b]'
+              : 'border border-rose-500/40 bg-rose-950/20 text-rose-300'
           }`}>
             <div className="flex items-center gap-3">
-              {feedback.isCorrect ? (
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/20 border border-emerald-500/30">
-                  <Check className="h-5 w-5 text-emerald-400" />
-                </div>
-              ) : (
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-rose-500/20 border border-rose-500/30">
-                  <X className="h-5 w-5 text-rose-400" />
-                </div>
-              )}
+              <div className={`h-8 w-8 rounded-xl flex items-center justify-center font-black ${
+                feedback.isCorrect ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white'
+              }`}>
+                {feedback.isCorrect ? <Check className="h-4 w-4" /> : <X className="h-4 w-4" />}
+              </div>
               <span className="font-mono font-bold text-sm">{feedback.message}</span>
             </div>
 
             <button
               onClick={handleNext}
-              className="rounded-lg bg-amber-500 px-4 py-1.5 font-bold text-xs text-slate-950 hover:bg-amber-400"
+              className={`px-4 py-2 font-black text-xs rounded-xl ${
+                isBrutal ? 'bg-neutral-900 text-white border-2 border-neutral-900 shadow-[2px_2px_0px_0px_#ff5500]' : 'bg-white text-neutral-950'
+              }`}
             >
               Next Sample →
             </button>

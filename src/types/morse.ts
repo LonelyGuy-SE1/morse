@@ -30,6 +30,8 @@ export interface KochLesson {
   description: string;
 }
 
+export type ThemeMode = 'apple-dark' | 'neo-brutal' | 'apple-light';
+
 export interface AudioSettings {
   pitch: number;            // Hz (default 650)
   charWpm: number;          // Target character speed (default 20)
@@ -38,6 +40,7 @@ export interface AudioSettings {
   hfNoiseEnabled: boolean;  // HF radio atmospheric static simulation
   hfNoiseVolume: number;    // 0.0 - 0.5
   attackDecayMs: number;    // Click suppression envelope time (default 5ms)
+  theme: ThemeMode;         // 'apple-dark' | 'neo-brutal' | 'apple-light'
 }
 
 export interface UserStats {

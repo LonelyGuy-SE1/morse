@@ -28,27 +28,25 @@ export const AsocExamSimulator = ({
   onStatsUpdate,
 }: AsocExamSimulatorProps) => {
   const [examGrade, setExamGrade] = useState<'restricted' | 'general' | 'master'>('restricted');
-  const [examStep, setExamStep] = useState<'setup' | 'running' | 'review' | 'result'>('setup');
+  const [examStep, setExamStep] = useState<'setup' | 'running' | 'result'>('setup');
   const [sectionType, setSectionType] = useState<'cipher' | 'plain'>('cipher');
 
-  // Exam content
   const [cipherGroups, setCipherGroups] = useState<string[]>([]);
   const [plainMessage, setPlainMessage] = useState<string>('');
   const [userSubmission, setUserSubmission] = useState<string>('');
 
-  // Timer & state
-  const [timeLeftSec, setTimeLeftSec] = useState<number>(300); // 5 minutes
+  const [timeLeftSec, setTimeLeftSec] = useState<number>(300);
   const [isPlayingAudio, setIsPlayingAudio] = useState<boolean>(false);
   const [examResult, setExamResult] = useState<AsocExamResult | null>(null);
 
   const timerIntervalRef = useRef<number | null>(null);
 
-  // Speed according to grade
+  const isBrutal = settings.theme === 'neo-brutal';
+  const isDark = settings.theme === 'apple-dark';
+
   const targetWpm = examGrade === 'restricted' ? 8 : examGrade === 'general' ? 12 : 20;
 
-  // Initialize Exam
   const startExam = async () => {
-    // Generate 15 standard 5-character groups (75 characters) for practical mock duration
     const groups = generateRandomGroups(15);
     setCipherGroups(groups);
 
@@ -57,9 +55,8 @@ export const AsocExamSimulator = ({
 
     setUserSubmission('');
     setExamStep('running');
-    setTimeLeftSec(300); // 5 minutes standard test time
+    setTimeLeftSec(300);
 
-    // Start timer countdown
     if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
     timerIntervalRef.current = window.setInterval(() => {
       setTimeLeftSec((prev) => {
@@ -71,10 +68,8 @@ export const AsocExamSimulator = ({
       });
     }, 1000);
 
-    // Audio stream text
     const textToPlay = sectionType === 'cipher' ? groups.join(' ') : plain;
 
-    // Temporarily calibrate audio speed for exam standard
     audioEngine.updateSettings({
       charWpm: Math.max(targetWpm, 16),
       effectiveWpm: targetWpm,
@@ -95,7 +90,6 @@ export const AsocExamSimulator = ({
     setIsPlayingAudio(false);
   };
 
-  // Grade user exam according to official WPC criteria
   const handleGradeExam = () => {
     stopExamAudio();
     if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
@@ -179,32 +173,44 @@ export const AsocExamSimulator = ({
   };
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 p-4">
+    <div className="mx-auto max-w-5xl space-y-6">
       {/* Exam Header */}
-      <div className="rounded-2xl border border-slate-800 bg-[#12141d] p-5 shadow-lg">
-        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-4">
+      <div className={`p-6 transition-all ${
+        isBrutal
+          ? 'rounded-3xl border-2 border-neutral-900 bg-white shadow-[4px_4px_0px_0px_#18181b]'
+          : isDark
+          ? 'rounded-3xl border border-white/[0.08] bg-[#141418] shadow-xl'
+          : 'rounded-3xl border border-neutral-200 bg-white shadow-sm'
+      }`}>
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b pb-4 mb-4 border-inherit">
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/30">
+            <div className={`h-11 w-11 rounded-2xl flex items-center justify-center ${
+              isBrutal ? 'bg-[#ff5500] text-white border-2 border-neutral-900 shadow-[2px_2px_0px_0px_#18181b]' : 'bg-blue-600 text-white'
+            }`}>
               <FileCheck className="h-6 w-6" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-xs font-mono font-bold uppercase tracking-wider text-amber-400">
-                  Government of India // WPC Wing
+                <span className={`text-[11px] font-mono font-black uppercase tracking-wider ${
+                  isBrutal ? 'text-[#ff5500]' : 'text-blue-500'
+                }`}>
+                  Ministry of Communications // WPC Wing
                 </span>
-                <span className="rounded bg-emerald-500/10 px-2 py-0.5 text-xs font-bold text-emerald-400 border border-emerald-500/20">
+                <span className={`text-[10px] font-mono px-2 py-0.5 font-bold rounded-md ${
+                  isBrutal ? 'bg-neutral-900 text-white' : 'bg-neutral-200 text-neutral-800'
+                }`}>
                   Official Standard
                 </span>
               </div>
-              <h2 className="text-xl font-bold text-white mt-0.5">
-                ASOC Examination Simulator
-              </h2>
+              <h2 className="text-xl font-black mt-0.5 tracking-tight">ASOC Examination Simulator</h2>
             </div>
           </div>
 
           {examStep === 'running' && (
-            <div className="flex items-center gap-2 rounded-xl bg-[#171926] px-4 py-2 border border-slate-700 font-mono text-base font-bold text-amber-400">
-              <Clock className="h-4 w-4 animate-spin text-amber-400" />
+            <div className={`flex items-center gap-2 px-4 py-2 font-mono text-sm font-black rounded-xl ${
+              isBrutal ? 'bg-[#ffcc00] border-2 border-neutral-900 text-neutral-900 shadow-[2px_2px_0px_0px_#18181b]' : 'bg-blue-600 text-white'
+            }`}>
+              <Clock className="h-4 w-4 animate-spin" />
               <span>{formatTime(timeLeftSec)} REMAINING</span>
             </div>
           )}
@@ -212,8 +218,8 @@ export const AsocExamSimulator = ({
 
         {/* Grade Selection */}
         {examStep === 'setup' && (
-          <div className="mt-5 space-y-4">
-            <label className="block text-xs font-mono uppercase text-slate-400">
+          <div className="space-y-5">
+            <label className="block text-xs font-mono uppercase font-bold opacity-70">
               Select Examination Target Grade
             </label>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -222,63 +228,77 @@ export const AsocExamSimulator = ({
                   id: 'restricted',
                   title: 'Restricted Grade (ASOC-R)',
                   wpm: '8 WPM',
-                  desc: 'Standard requirement for entry-level amateur station operator license.',
+                  desc: 'Standard requirement for entry-level operator license.',
                 },
                 {
                   id: 'general',
                   title: 'General Grade (ASOC-G)',
                   wpm: '12 WPM',
-                  desc: 'Standard requirement for unrestricted HF transceiver privileges.',
+                  desc: 'Full HF transmission privileges with higher bandwidth.',
                 },
                 {
                   id: 'master',
                   title: 'Master Challenge',
                   wpm: '20 WPM',
-                  desc: 'High-speed CW qualification for contest & DX operation.',
+                  desc: 'High-speed CW qualification for contest & DX mastery.',
                 },
               ].map((g) => (
                 <button
                   key={g.id}
                   onClick={() => setExamGrade(g.id as 'restricted' | 'general' | 'master')}
-                  className={`flex flex-col text-left rounded-xl p-4 border transition-all ${
+                  className={`flex flex-col text-left p-5 rounded-2xl transition-all ${
                     examGrade === g.id
-                      ? 'border-amber-500 bg-amber-500/10 shadow-lg shadow-amber-500/10'
-                      : 'border-slate-800 bg-[#161824] hover:border-slate-600'
+                      ? isBrutal
+                        ? 'border-2 border-neutral-900 bg-[#ffcc00] text-neutral-900 shadow-[4px_4px_0px_0px_#18181b] scale-[1.02]'
+                        : 'border-2 border-blue-500 bg-blue-500/10 shadow-lg'
+                      : isBrutal
+                      ? 'border-2 border-neutral-900 bg-[#f5f4ee] hover:bg-neutral-200'
+                      : 'border border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.06]'
                   }`}
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-sm text-white">{g.title}</span>
-                    <span className="rounded bg-amber-500/20 px-2 py-0.5 font-mono text-xs font-bold text-amber-400">
+                  <div className="flex items-center justify-between w-full">
+                    <span className="font-black text-sm">{g.title}</span>
+                    <span className={`px-2 py-0.5 font-mono text-xs font-bold rounded-md ${
+                      isBrutal ? 'bg-neutral-900 text-white' : 'bg-blue-600 text-white'
+                    }`}>
                       {g.wpm}
                     </span>
                   </div>
-                  <p className="mt-2 text-xs text-slate-400">{g.desc}</p>
+                  <p className="mt-2 text-xs opacity-75 font-medium">{g.desc}</p>
                 </button>
               ))}
             </div>
 
             {/* Test Section Type */}
             <div className="pt-2">
-              <label className="block text-xs font-mono uppercase text-slate-400 mb-2">
+              <label className="block text-xs font-mono uppercase font-bold opacity-70 mb-2">
                 Exam Section
               </label>
               <div className="flex gap-3">
                 <button
                   onClick={() => setSectionType('cipher')}
-                  className={`rounded-xl px-4 py-2.5 text-xs font-semibold border transition-all ${
+                  className={`px-4 py-2.5 text-xs font-bold rounded-xl transition-all ${
                     sectionType === 'cipher'
-                      ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400 font-bold'
-                      : 'border-slate-800 bg-[#161824] text-slate-400'
+                      ? isBrutal
+                        ? 'bg-neutral-900 text-white border-2 border-neutral-900 shadow-[2px_2px_0px_0px_#ff5500]'
+                        : 'bg-white text-neutral-950 font-semibold shadow'
+                      : isBrutal
+                      ? 'bg-[#f5f4ee] border-2 border-neutral-900'
+                      : 'bg-white/[0.05] border border-white/[0.1]'
                   }`}
                 >
                   Section A: 5-Character Cipher Groups (Standard)
                 </button>
                 <button
                   onClick={() => setSectionType('plain')}
-                  className={`rounded-xl px-4 py-2.5 text-xs font-semibold border transition-all ${
+                  className={`px-4 py-2.5 text-xs font-bold rounded-xl transition-all ${
                     sectionType === 'plain'
-                      ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400 font-bold'
-                      : 'border-slate-800 bg-[#161824] text-slate-400'
+                      ? isBrutal
+                        ? 'bg-neutral-900 text-white border-2 border-neutral-900 shadow-[2px_2px_0px_0px_#ff5500]'
+                        : 'bg-white text-neutral-950 font-semibold shadow'
+                      : isBrutal
+                      ? 'bg-[#f5f4ee] border-2 border-neutral-900'
+                      : 'bg-white/[0.05] border border-white/[0.1]'
                   }`}
                 >
                   Section B: Plain Language Telegraphic Text
@@ -286,13 +306,18 @@ export const AsocExamSimulator = ({
               </div>
             </div>
 
-            {/* Launch Exam Button */}
-            <div className="pt-4 border-t border-slate-800 flex justify-end">
+            <div className="pt-4 border-t border-inherit flex justify-end">
               <button
                 onClick={startExam}
-                className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-6 py-3 font-bold text-slate-950 shadow-lg shadow-amber-500/20 hover:from-amber-400 hover:to-amber-500 transition-all active:scale-95"
+                className={`flex items-center gap-2 px-6 py-3 font-bold text-sm rounded-xl transition-all ${
+                  isBrutal
+                    ? 'bg-[#ff5500] text-white border-2 border-neutral-900 shadow-[3px_3px_0px_0px_#18181b] hover:translate-x-[-1px] hover:translate-y-[-1px] active:translate-x-[2px] active:translate-y-[2px]'
+                    : isDark
+                    ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-lg'
+                    : 'bg-neutral-900 hover:bg-neutral-800 text-white shadow-md'
+                }`}
               >
-                <Play className="h-5 w-5 fill-current" />
+                <Play className="h-4 w-4 fill-current" />
                 <span>Begin Official Mock Exam ({targetWpm} WPM)</span>
               </button>
             </div>
@@ -300,58 +325,73 @@ export const AsocExamSimulator = ({
         )}
       </div>
 
-      {/* Running Exam Station */}
+      {/* Running Exam Screen */}
       {examStep === 'running' && (
-        <div className="rounded-2xl border border-slate-800 bg-[#12141d] p-6 shadow-xl space-y-6">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+        <div className={`p-8 space-y-6 transition-all ${
+          isBrutal
+            ? 'rounded-3xl border-2 border-neutral-900 bg-white shadow-[6px_6px_0px_0px_#18181b]'
+            : isDark
+            ? 'rounded-3xl border border-white/[0.08] bg-[#141418] shadow-2xl'
+            : 'rounded-3xl border border-neutral-200 bg-white shadow-md'
+        }`}>
+          <div className="flex items-center justify-between border-b pb-4 border-inherit">
             <div className="flex items-center gap-3">
-              <div className={`h-3 w-3 rounded-full ${isPlayingAudio ? 'bg-amber-400 animate-pulse' : 'bg-slate-600'}`} />
-              <span className="font-mono text-sm text-slate-300">
-                {isPlayingAudio ? 'Audio Stream Transmitting...' : 'Transmission Finished — Complete Copy Check'}
+              <div className={`h-3 w-3 rounded-full ${isPlayingAudio ? 'bg-[#ff5500] animate-pulse' : 'bg-neutral-500'}`} />
+              <span className="font-mono text-sm font-bold">
+                {isPlayingAudio ? 'Audio Stream Transmitting...' : 'Transmission Complete — Verify Answers'}
               </span>
             </div>
 
             {isPlayingAudio && (
               <button
                 onClick={stopExamAudio}
-                className="flex items-center gap-1.5 rounded-lg bg-rose-600/20 border border-rose-500/30 px-3 py-1.5 text-xs text-rose-400 hover:bg-rose-600/30"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg bg-rose-500 text-white"
               >
-                <Square className="h-3.5 w-3.5" />
+                <Square className="h-3.5 w-3.5 fill-current" />
                 <span>Abort Audio</span>
               </button>
             )}
           </div>
 
           <div>
-            <label className="block text-xs font-mono uppercase text-slate-400 mb-2">
-              Official Candidate Transcription Answer Sheet
+            <label className="block text-xs font-mono uppercase tracking-wider font-bold opacity-70 mb-2">
+              Official Candidate Transcription Sheet
             </label>
             <textarea
               rows={6}
               value={userSubmission}
               onChange={(e) => setUserSubmission(e.target.value.toUpperCase())}
               placeholder="Record received telegraph characters here in 5-letter blocks..."
-              className="w-full rounded-xl border border-slate-700 bg-[#161824] p-4 font-mono text-lg tracking-widest text-amber-300 placeholder:text-slate-600 focus:border-amber-500 focus:outline-none uppercase"
+              className={`w-full p-4 font-mono text-lg font-bold tracking-widest rounded-2xl outline-none uppercase ${
+                isBrutal
+                  ? 'bg-white border-2 border-neutral-900 shadow-[3px_3px_0px_0px_#18181b] focus:border-[#ff5500]'
+                  : isDark
+                  ? 'bg-white/[0.04] border border-white/[0.1] text-white focus:border-blue-500'
+                  : 'bg-white border border-neutral-300'
+              }`}
             />
-            <p className="text-[11px] text-slate-500 mt-2 font-mono">
-              Note: Uncorrected errors, missing characters, or extra additions will be deducted per official WPC rules.
-            </p>
           </div>
 
-          <div className="flex items-center justify-between border-t border-slate-800 pt-4">
+          <div className="flex items-center justify-between border-t pt-4 border-inherit">
             <button
               onClick={() => {
                 stopExamAudio();
                 setExamStep('setup');
               }}
-              className="rounded-xl border border-slate-700 bg-[#181a26] px-4 py-2.5 text-xs text-slate-300 hover:text-white"
+              className={`px-4 py-2.5 font-bold text-xs rounded-xl ${
+                isBrutal ? 'bg-[#f5f4ee] border-2 border-neutral-900' : 'bg-neutral-800 text-neutral-300'
+              }`}
             >
               Cancel Exam
             </button>
 
             <button
               onClick={handleGradeExam}
-              className="flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-2.5 font-bold text-white shadow-lg shadow-emerald-600/20 hover:bg-emerald-500 transition-all active:scale-95"
+              className={`flex items-center gap-2 px-6 py-2.5 font-bold text-sm rounded-xl ${
+                isBrutal
+                  ? 'bg-[#ffcc00] text-neutral-900 border-2 border-neutral-900 shadow-[3px_3px_0px_0px_#18181b]'
+                  : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg'
+              }`}
             >
               <FileCheck className="h-4 w-4" />
               <span>Submit & Official Evaluation</span>
@@ -362,96 +402,99 @@ export const AsocExamSimulator = ({
 
       {/* Official Certificate & Result */}
       {examStep === 'result' && examResult && (
-        <div className="rounded-2xl border border-slate-700 bg-[#11131c] p-8 shadow-2xl space-y-6">
-          <div className="text-center border-b border-slate-800 pb-6">
-            <span className="font-mono text-xs uppercase tracking-widest text-amber-400 font-bold">
-              AMATEUR STATION OPERATOR'S CERTIFICATE (ASOC)
+        <div className={`p-8 space-y-6 transition-all ${
+          isBrutal
+            ? 'rounded-3xl border-2 border-neutral-900 bg-white shadow-[8px_8px_0px_0px_#18181b]'
+            : isDark
+            ? 'rounded-3xl border border-white/[0.08] bg-[#141418] shadow-2xl'
+            : 'rounded-3xl border border-neutral-200 bg-white shadow-md'
+        }`}>
+          <div className="text-center border-b pb-6 border-inherit">
+            <span className="font-mono text-xs uppercase tracking-widest font-black text-[#ff5500]">
+              GOVERNMENT OF INDIA // WPC WING
             </span>
-            <h1 className="text-2xl font-black text-white mt-1">OFFICIAL EXAMINATION REPORT</h1>
-            <p className="text-xs text-slate-400 font-mono mt-1">
+            <h1 className="text-2xl font-black mt-1 tracking-tight">AMATEUR STATION OPERATOR'S CERTIFICATE</h1>
+            <p className="text-xs font-mono opacity-70 mt-1">
               Certificate No: {examResult.id} • Date: {examResult.date}
             </p>
           </div>
 
-          {/* Pass/Fail Status Banner */}
-          <div className={`rounded-xl p-5 border text-center ${
-            examResult.passed 
-              ? 'border-emerald-500/40 bg-emerald-950/20 text-emerald-400' 
+          {/* Pass Banner */}
+          <div className={`p-6 rounded-2xl text-center border-2 ${
+            examResult.passed
+              ? isBrutal
+                ? 'border-neutral-900 bg-[#ffcc00] text-neutral-900 shadow-[4px_4px_0px_0px_#18181b]'
+                : 'border-emerald-500/40 bg-emerald-950/20 text-emerald-400'
+              : isBrutal
+              ? 'border-neutral-900 bg-rose-200 text-neutral-900 shadow-[4px_4px_0px_0px_#18181b]'
               : 'border-rose-500/40 bg-rose-950/20 text-rose-400'
           }`}>
             <div className="flex justify-center mb-2">
-              {examResult.passed ? (
-                <CheckCircle className="h-10 w-10 text-emerald-400" />
-              ) : (
-                <XCircle className="h-10 w-10 text-rose-400" />
-              )}
+              {examResult.passed ? <CheckCircle className="h-10 w-10" /> : <XCircle className="h-10 w-10" />}
             </div>
-            <h3 className="text-xl font-black tracking-wider uppercase">
-              {examResult.passed ? 'QUALIFIED / PASSED' : 'DID NOT QUALIFY'}
+            <h3 className="text-xl font-black uppercase tracking-wider">
+              {examResult.passed ? 'QUALIFIED / CERTIFIED' : 'DID NOT QUALIFY'}
             </h3>
-            <p className="text-xs text-slate-300 mt-1">
+            <p className="text-xs mt-1 font-medium max-w-lg mx-auto">
               {examResult.passed
                 ? `Candidate meets the standard proficiency requirements for ASOC ${examResult.grade} at ${examResult.wpm} WPM.`
-                : `Score below the required pass threshold. Recommended: Focus on Koch lessons and rhythmic copy.`}
+                : 'Score below pass threshold. Keep practicing Koch method lessons!'}
             </p>
           </div>
 
-          {/* Detailed Error Breakdown */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 font-mono text-center">
-            <div className="rounded-xl border border-slate-800 bg-[#171926] p-4">
-              <span className="text-xs text-slate-400">Final Accuracy</span>
-              <div className="text-2xl font-bold text-amber-400 mt-1">
+          {/* Breakdown Metrics */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center font-mono">
+            <div className={`p-4 rounded-xl ${isBrutal ? 'bg-[#f5f4ee] border-2 border-neutral-900' : 'bg-white/[0.04]'}`}>
+              <span className="text-xs opacity-60">Final Accuracy</span>
+              <div className="text-2xl font-black mt-1 text-[#ff5500]">
                 {sectionType === 'cipher' ? examResult.cipherAccuracy : examResult.plainAccuracy}%
               </div>
             </div>
 
-            <div className="rounded-xl border border-slate-800 bg-[#171926] p-4">
-              <span className="text-xs text-slate-400">Substitutions</span>
-              <div className="text-2xl font-bold text-rose-400 mt-1">
-                {examResult.errors.substitutions}
-              </div>
+            <div className={`p-4 rounded-xl ${isBrutal ? 'bg-[#f5f4ee] border-2 border-neutral-900' : 'bg-white/[0.04]'}`}>
+              <span className="text-xs opacity-60">Substitutions</span>
+              <div className="text-2xl font-black mt-1 text-rose-500">{examResult.errors.substitutions}</div>
             </div>
 
-            <div className="rounded-xl border border-slate-800 bg-[#171926] p-4">
-              <span className="text-xs text-slate-400">Omissions</span>
-              <div className="text-2xl font-bold text-amber-400 mt-1">
-                {examResult.errors.omissions}
-              </div>
+            <div className={`p-4 rounded-xl ${isBrutal ? 'bg-[#f5f4ee] border-2 border-neutral-900' : 'bg-white/[0.04]'}`}>
+              <span className="text-xs opacity-60">Omissions</span>
+              <div className="text-2xl font-black mt-1 text-amber-500">{examResult.errors.omissions}</div>
             </div>
 
-            <div className="rounded-xl border border-slate-800 bg-[#171926] p-4">
-              <span className="text-xs text-slate-400">Additions</span>
-              <div className="text-2xl font-bold text-slate-400 mt-1">
-                {examResult.errors.additions}
-              </div>
+            <div className={`p-4 rounded-xl ${isBrutal ? 'bg-[#f5f4ee] border-2 border-neutral-900' : 'bg-white/[0.04]'}`}>
+              <span className="text-xs opacity-60">Additions</span>
+              <div className="text-2xl font-black mt-1">{examResult.errors.additions}</div>
             </div>
           </div>
 
-          {/* Original Reference vs Candidate Transcript */}
-          <div className="rounded-xl border border-slate-800 bg-[#0b0d14] p-4 space-y-3 font-mono text-xs">
+          {/* Comparison */}
+          <div className={`p-4 rounded-2xl space-y-3 font-mono text-xs ${
+            isBrutal ? 'bg-[#f5f4ee] border-2 border-neutral-900' : 'bg-[#0d0d11]'
+          }`}>
             <div>
-              <span className="text-slate-500 uppercase">Original Reference:</span>
-              <div className="mt-1 text-slate-300 break-all bg-[#141622] p-2.5 rounded border border-slate-800">
+              <span className="opacity-60 uppercase font-bold">Original Reference:</span>
+              <div className="mt-1 p-3 rounded-xl bg-white border border-neutral-300 text-neutral-900 break-all font-bold">
                 {sectionType === 'cipher' ? cipherGroups.join(' ') : plainMessage}
               </div>
             </div>
 
             <div>
-              <span className="text-slate-500 uppercase">Your Answer:</span>
-              <div className="mt-1 text-amber-300 break-all bg-[#141622] p-2.5 rounded border border-slate-800">
-                {userSubmission || '(No submission entered)'}
+              <span className="opacity-60 uppercase font-bold">Candidate Transcription:</span>
+              <div className="mt-1 p-3 rounded-xl bg-white border border-neutral-300 text-neutral-900 break-all font-bold">
+                {userSubmission || '(No submission recorded)'}
               </div>
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex items-center justify-between border-t border-slate-800 pt-4">
+          <div className="flex items-center justify-between border-t pt-4 border-inherit">
             <button
               onClick={() => window.print()}
-              className="flex items-center gap-2 rounded-xl border border-slate-700 bg-[#181a26] px-4 py-2.5 text-xs font-semibold text-slate-300 hover:text-white"
+              className={`flex items-center gap-1.5 px-4 py-2.5 font-bold text-xs rounded-xl ${
+                isBrutal ? 'bg-white border-2 border-neutral-900 shadow-[2px_2px_0px_0px_#18181b]' : 'bg-white/[0.08]'
+              }`}
             >
               <Printer className="h-4 w-4" />
-              <span>Print Certificate</span>
+              <span>Print Official Certificate</span>
             </button>
 
             <button
@@ -459,7 +502,9 @@ export const AsocExamSimulator = ({
                 setExamStep('setup');
                 setExamResult(null);
               }}
-              className="flex items-center gap-2 rounded-xl bg-amber-500 px-6 py-2.5 font-bold text-xs text-slate-950 hover:bg-amber-400"
+              className={`flex items-center gap-2 px-6 py-2.5 font-bold text-xs rounded-xl ${
+                isBrutal ? 'bg-[#ffcc00] border-2 border-neutral-900 shadow-[2px_2px_0px_0px_#18181b]' : 'bg-blue-600 text-white'
+              }`}
             >
               <RotateCcw className="h-4 w-4" />
               <span>Take Another Mock Exam</span>

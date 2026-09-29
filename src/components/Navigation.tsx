@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import type { PracticeMode, AudioSettings } from '../types/morse';
+import type { PracticeMode, AudioSettings, ThemeMode } from '../types/morse';
 import { 
   GraduationCap, 
   Headphones, 
@@ -8,7 +8,10 @@ import {
   BookOpen, 
   BarChart2, 
   SlidersHorizontal,
-  Volume2
+  Volume2,
+  Moon,
+  Sun,
+  Zap
 } from 'lucide-react';
 
 interface NavigationProps {
@@ -17,6 +20,7 @@ interface NavigationProps {
   settings: AudioSettings;
   onOpenSettings: () => void;
   onVolumeChange: (volume: number) => void;
+  onThemeChange: (theme: ThemeMode) => void;
   isPlaying: boolean;
   isKeyingActive: boolean;
 }
@@ -27,71 +31,120 @@ export const Navigation: FC<NavigationProps> = ({
   settings,
   onOpenSettings,
   onVolumeChange,
+  onThemeChange,
   isPlaying,
   isKeyingActive,
 }) => {
-  const navItems: { id: PracticeMode; label: string; icon: React.ReactNode; badge?: string }[] = [
-    { id: 'koch', label: 'Koch Academy', icon: <GraduationCap className="h-4 w-4" />, badge: '40 Levels' },
-    { id: 'copy', label: 'Audio Copy (RX)', icon: <Headphones className="h-4 w-4" /> },
-    { id: 'keyer', label: 'Sending Keyer (TX)', icon: <Radio className="h-4 w-4" /> },
-    { id: 'exam', label: 'ASOC Mock Exam', icon: <FileCheck className="h-4 w-4" />, badge: 'WPC' },
-    { id: 'reference', label: 'Morse Soundboard', icon: <BookOpen className="h-4 w-4" /> },
-    { id: 'stats', label: 'Analytics', icon: <BarChart2 className="h-4 w-4" /> },
+  const isBrutal = settings.theme === 'neo-brutal';
+  const isDark = settings.theme === 'apple-dark';
+
+  const navItems: { id: PracticeMode; label: string; icon: typeof GraduationCap; badge?: string }[] = [
+    { id: 'koch', label: 'Koch Academy', icon: GraduationCap, badge: '40' },
+    { id: 'copy', label: 'Audio Copy (RX)', icon: Headphones },
+    { id: 'keyer', label: 'Keyer (TX)', icon: Radio },
+    { id: 'exam', label: 'ASOC Mock Exam', icon: FileCheck, badge: 'WPC' },
+    { id: 'reference', label: 'Dictionary', icon: BookOpen },
+    { id: 'stats', label: 'Telemetry', icon: BarChart2 },
   ];
 
+  const cycleTheme = () => {
+    if (settings.theme === 'neo-brutal') onThemeChange('apple-dark');
+    else if (settings.theme === 'apple-dark') onThemeChange('apple-light');
+    else onThemeChange('neo-brutal');
+  };
+
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-slate-800 bg-[#0c0d13]/90 backdrop-blur-md px-4 py-3">
-      <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3">
-        {/* Brand / Callsign Hardware Plate */}
+    <header className={`sticky top-0 z-40 w-full transition-colors ${
+      isBrutal
+        ? 'bg-[#f5f4ee]/90 backdrop-blur-md border-b-2 border-neutral-900'
+        : isDark
+        ? 'bg-[#09090b]/80 backdrop-blur-xl border-b border-white/[0.08]'
+        : 'bg-white/80 backdrop-blur-xl border-b border-neutral-200'
+    } px-4 py-3`}>
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4">
+        {/* Brand & Callout */}
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-amber-700 shadow-lg shadow-amber-500/20 text-slate-950 font-black text-lg tracking-wider">
+          <div className={`flex h-10 w-10 items-center justify-center font-black text-sm tracking-wider ${
+            isBrutal
+              ? 'bg-[#ff5500] text-neutral-900 border-2 border-neutral-900 shadow-[3px_3px_0px_0px_#18181b] rounded-xl'
+              : isDark
+              ? 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-xl shadow-lg shadow-blue-500/20'
+              : 'bg-neutral-900 text-white rounded-xl shadow-md'
+          }`}>
             CW
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-extrabold tracking-wider text-white text-base">DITDAH</span>
-              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/30">
-                ASOC ACADEMY
+              <span className={`font-black tracking-tight text-base ${
+                isBrutal ? 'text-neutral-900' : isDark ? 'text-white' : 'text-neutral-900'
+              }`}>
+                DITDAH
+              </span>
+              <span className={`text-[10px] font-mono px-2 py-0.5 font-bold ${
+                isBrutal
+                  ? 'bg-neutral-900 text-white rounded-md'
+                  : isDark
+                  ? 'bg-white/[0.08] text-neutral-300 border border-white/[0.1] rounded-md'
+                  : 'bg-neutral-100 text-neutral-700 border border-neutral-200 rounded-md'
+              }`}>
+                ASOC 20 WPM
               </span>
             </div>
-            <p className="text-[11px] font-mono text-slate-400">High-Speed CW Telegraphy Tutor</p>
+            <p className={`text-[11px] ${
+              isBrutal ? 'text-neutral-600 font-mono' : isDark ? 'text-neutral-400' : 'text-neutral-500'
+            }`}>
+              Precision CW Academy & Exam Station
+            </p>
           </div>
         </div>
 
-        {/* Tactile Hardware Status Indicators */}
-        <div className="hidden md:flex items-center gap-4 rounded-lg bg-[#141620] px-3 py-1.5 border border-slate-800 text-xs font-mono">
+        {/* Live Audio / Carrier State Indicators */}
+        <div className={`hidden md:flex items-center gap-3 px-3 py-1.5 font-mono text-xs font-semibold ${
+          isBrutal
+            ? 'bg-white border-2 border-neutral-900 shadow-[2px_2px_0px_0px_#18181b] rounded-xl'
+            : isDark
+            ? 'bg-white/[0.04] border border-white/[0.08] rounded-xl text-neutral-300'
+            : 'bg-neutral-100 border border-neutral-200 rounded-xl text-neutral-700'
+        }`}>
           <div className="flex items-center gap-1.5">
-            <span
-              className={`h-2.5 w-2.5 rounded-full ${
-                isPlaying ? 'bg-amber-400 shadow-[0_0_8px_#f59e0b]' : 'bg-slate-700'
-              } transition-all duration-100`}
-            />
-            <span className={isPlaying ? 'text-amber-300 font-bold' : 'text-slate-500'}>RX AUDIO</span>
+            <span className={`h-2.5 w-2.5 rounded-full transition-all ${
+              isPlaying
+                ? 'bg-[#ff5500] scale-125 animate-pulse shadow-[0_0_8px_#ff5500]'
+                : isDark ? 'bg-neutral-700' : 'bg-neutral-300'
+            }`} />
+            <span className={isPlaying ? 'text-[#ff5500] font-bold' : 'opacity-60'}>RX AUDIO</span>
           </div>
 
-          <div className="h-3 w-[1px] bg-slate-800" />
+          <span className="opacity-30">|</span>
 
           <div className="flex items-center gap-1.5">
-            <span
-              className={`h-2.5 w-2.5 rounded-full ${
-                isKeyingActive ? 'bg-emerald-400 shadow-[0_0_8px_#10b981]' : 'bg-slate-700'
-              } transition-all duration-100`}
-            />
-            <span className={isKeyingActive ? 'text-emerald-300 font-bold' : 'text-slate-500'}>TX CARRIER</span>
+            <span className={`h-2.5 w-2.5 rounded-full transition-all ${
+              isKeyingActive
+                ? 'bg-emerald-500 scale-125 shadow-[0_0_8px_#10b981]'
+                : isDark ? 'bg-neutral-700' : 'bg-neutral-300'
+            }`} />
+            <span className={isKeyingActive ? 'text-emerald-500 font-bold' : 'opacity-60'}>TX KEY</span>
           </div>
 
-          <div className="h-3 w-[1px] bg-slate-800" />
+          <span className="opacity-30">|</span>
 
-          <div className="text-slate-400">
-            <span className="text-white font-bold">{settings.charWpm}</span>
-            <span className="text-[10px] text-slate-500">/{settings.effectiveWpm} WPM</span>
+          <div className="font-mono">
+            <span>{settings.charWpm}</span>
+            <span className="opacity-50">/{settings.effectiveWpm} WPM</span>
           </div>
         </div>
 
-        {/* Quick Audio Controls */}
-        <div className="flex items-center gap-3">
-          <div className="hidden sm:flex items-center gap-2 rounded-lg bg-[#141620] px-3 py-1.5 border border-slate-800">
-            <Volume2 className="h-4 w-4 text-slate-400" />
+        {/* Global Controls & Theme Switcher */}
+        <div className="flex items-center gap-2">
+          {/* Volume Slider */}
+          <div className={`hidden sm:flex items-center gap-2 px-3 py-1.5 ${
+            isBrutal
+              ? 'bg-white border-2 border-neutral-900 shadow-[2px_2px_0px_0px_#18181b] rounded-xl'
+              : isDark
+              ? 'bg-white/[0.04] border border-white/[0.08] rounded-xl'
+              : 'bg-neutral-100 border border-neutral-200 rounded-xl'
+          }`}>
+            <Volume2 className="h-4 w-4 opacity-70" />
             <input
               type="range"
               min="0"
@@ -99,44 +152,96 @@ export const Navigation: FC<NavigationProps> = ({
               step="0.05"
               value={settings.volume}
               onChange={(e) => onVolumeChange(Number(e.target.value))}
-              aria-label="Master volume"
-              className="h-1.5 w-20 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-500"
+              aria-label="Volume"
+              className="h-1.5 w-16 appearance-none rounded-lg cursor-pointer bg-neutral-400 accent-neutral-900"
             />
           </div>
 
+          {/* Theme Selector Button */}
+          <button
+            onClick={cycleTheme}
+            title="Toggle theme: Neo-Brutalist, Apple Dark, Apple Light"
+            className={`flex items-center gap-1.5 px-3 py-2 text-xs font-bold transition-all ${
+              isBrutal
+                ? 'bg-[#ffcc00] text-neutral-900 border-2 border-neutral-900 shadow-[2px_2px_0px_0px_#18181b] hover:translate-x-[-1px] hover:translate-y-[-1px] rounded-xl active:translate-x-[1px] active:translate-y-[1px]'
+                : isDark
+                ? 'bg-white/[0.08] text-white hover:bg-white/[0.12] border border-white/[0.1] rounded-xl'
+                : 'bg-neutral-100 text-neutral-900 hover:bg-neutral-200 border border-neutral-300 rounded-xl'
+            }`}
+          >
+            {settings.theme === 'neo-brutal' ? (
+              <>
+                <Zap className="h-3.5 w-3.5 fill-current" />
+                <span className="hidden sm:inline">Neo-Brutal</span>
+              </>
+            ) : settings.theme === 'apple-dark' ? (
+              <>
+                <Moon className="h-3.5 w-3.5 fill-current" />
+                <span className="hidden sm:inline">Apple Dark</span>
+              </>
+            ) : (
+              <>
+                <Sun className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Apple Light</span>
+              </>
+            )}
+          </button>
+
+          {/* Audio Settings Modal Trigger */}
           <button
             onClick={onOpenSettings}
-            className="flex items-center gap-1.5 rounded-lg border border-slate-700 bg-[#161824] px-3 py-1.5 text-xs font-semibold text-slate-300 hover:border-slate-500 hover:text-white transition-all shadow-sm"
+            className={`flex items-center gap-1.5 px-3 py-2 text-xs font-bold transition-all ${
+              isBrutal
+                ? 'bg-white text-neutral-900 border-2 border-neutral-900 shadow-[2px_2px_0px_0px_#18181b] rounded-xl hover:translate-x-[-1px] hover:translate-y-[-1px] active:translate-x-[1px] active:translate-y-[1px]'
+                : isDark
+                ? 'bg-white/[0.06] text-neutral-200 hover:bg-white/[0.1] border border-white/[0.1] rounded-xl'
+                : 'bg-neutral-100 text-neutral-800 hover:bg-neutral-200 border border-neutral-300 rounded-xl'
+            }`}
           >
-            <SlidersHorizontal className="h-3.5 w-3.5 text-amber-400" />
-            <span className="hidden sm:inline">Calibrate Audio</span>
+            <SlidersHorizontal className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Audio</span>
           </button>
         </div>
       </div>
 
-      {/* Main Mode Navigation Bar */}
-      <div className="mx-auto mt-3 max-w-7xl overflow-x-auto pb-1">
-        <nav className="flex space-x-1 sm:space-x-2">
+      {/* Mode Segmented Navigation Pill Strip */}
+      <div className="mx-auto mt-3 max-w-6xl overflow-x-auto pb-0.5">
+        <nav className={`flex p-1 gap-1.5 rounded-2xl ${
+          isBrutal
+            ? 'bg-neutral-200/80 border-2 border-neutral-900 p-1.5'
+            : isDark
+            ? 'bg-white/[0.03] border border-white/[0.06]'
+            : 'bg-neutral-100/90 border border-neutral-200'
+        }`}>
           {navItems.map((item) => {
             const isActive = currentMode === item.id;
+            const Icon = item.icon;
             return (
               <button
                 key={item.id}
                 onClick={() => onSelectMode(item.id)}
-                className={`flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-semibold transition-all whitespace-nowrap ${
+                className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl transition-all whitespace-nowrap ${
                   isActive
-                    ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 font-bold'
-                    : 'text-slate-400 hover:bg-[#161824] hover:text-slate-200'
+                    ? isBrutal
+                      ? 'bg-neutral-900 text-white shadow-[2px_2px_0px_0px_#ff5500] scale-[1.02]'
+                      : isDark
+                      ? 'bg-white text-neutral-950 shadow-md font-semibold'
+                      : 'bg-white text-neutral-900 shadow-sm border border-neutral-200 font-semibold'
+                    : isBrutal
+                    ? 'text-neutral-700 hover:bg-neutral-300/60'
+                    : isDark
+                    ? 'text-neutral-400 hover:text-white hover:bg-white/[0.05]'
+                    : 'text-neutral-600 hover:text-neutral-900 hover:bg-neutral-200/60'
                 }`}
               >
-                {item.icon}
+                <Icon className="h-4 w-4" />
                 <span>{item.label}</span>
                 {item.badge && (
-                  <span
-                    className={`ml-0.5 rounded px-1.5 py-0.2 text-[10px] uppercase font-mono ${
-                      isActive ? 'bg-slate-950/20 text-slate-900' : 'bg-slate-800 text-slate-400'
-                    }`}
-                  >
+                  <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded-md uppercase ${
+                    isActive
+                      ? isBrutal ? 'bg-[#ff5500] text-neutral-900 font-bold' : 'bg-neutral-200 text-neutral-800'
+                      : 'opacity-60 bg-neutral-300/50'
+                  }`}>
                     {item.badge}
                   </span>
                 )}

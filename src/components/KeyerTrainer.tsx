@@ -4,7 +4,8 @@ import { REVERSE_MORSE_TABLE } from '../utils/morseData';
 import type { AudioSettings, KeyerType } from '../types/morse';
 import { 
   Trash2, 
-  Activity
+  Activity,
+  Zap
 } from 'lucide-react';
 
 interface KeyerTrainerProps {
@@ -12,41 +13,38 @@ interface KeyerTrainerProps {
   onKeyingStateChange: (active: boolean) => void;
 }
 
-export const KeyerTrainer: React.FC<KeyerTrainerProps> = ({
+export const KeyerTrainer = ({
   settings,
   onKeyingStateChange,
-}) => {
+}: KeyerTrainerProps) => {
   const [keyerType, setKeyerType] = useState<KeyerType>('straight');
   const [isKeyPressed, setIsKeyPressed] = useState<boolean>(false);
-  const [currentBuffer, setCurrentBuffer] = useState<string>(''); // e.g. ".-."
+  const [currentBuffer, setCurrentBuffer] = useState<string>('');
   const [decodedText, setDecodedText] = useState<string>('');
   const [recentPulses, setRecentPulses] = useState<{ type: 'dit' | 'dah'; duration: number }[]>([]);
   const [targetSentence, setTargetSentence] = useState<string>('CQ CQ DE VU2XYZ K');
   const [ratioFeedback, setRatioFeedback] = useState<string>('Ready to key');
 
-  // Key timing refs
   const keyPressStartTime = useRef<number>(0);
-  const lastReleaseTime = useRef<number>(0);
   const letterTimeoutRef = useRef<number | null>(null);
   const wordTimeoutRef = useRef<number | null>(null);
   const iambicIntervalRef = useRef<number | null>(null);
 
-  // Iambic paddle state
   const paddleDitPressed = useRef<boolean>(false);
   const paddleDahPressed = useRef<boolean>(false);
 
-  // Timing thresholds based on current target WPM
-  const timing = audioEngine.calculateTiming(settings.charWpm, settings.effectiveWpm);
-  const ditThresholdMs = timing.ditMs * 1.8; // Anything below this is classified as a dit
+  const isBrutal = settings.theme === 'neo-brutal';
+  const isDark = settings.theme === 'apple-dark';
 
-  // Append a detected symbol (dit or dah) to current letter buffer
+  const timing = audioEngine.calculateTiming(settings.charWpm, settings.effectiveWpm);
+  const ditThresholdMs = timing.ditMs * 1.8;
+
   const appendSymbol = useCallback((symbol: '.' | '-') => {
     setCurrentBuffer((prev) => prev + symbol);
 
     if (letterTimeoutRef.current) clearTimeout(letterTimeoutRef.current);
     if (wordTimeoutRef.current) clearTimeout(wordTimeoutRef.current);
 
-    // After letter gap (3 dits equivalent), finalize character
     letterTimeoutRef.current = window.setTimeout(() => {
       setCurrentBuffer((currentMorse) => {
         if (!currentMorse) return '';
@@ -55,14 +53,12 @@ export const KeyerTrainer: React.FC<KeyerTrainerProps> = ({
         return '';
       });
 
-      // After word gap (7 dits equivalent), add space
       wordTimeoutRef.current = window.setTimeout(() => {
         setDecodedText((prev) => (prev.endsWith(' ') ? prev : prev + ' '));
       }, timing.wordSpaceMs);
     }, timing.charSpaceMs);
   }, [timing.charSpaceMs, timing.wordSpaceMs]);
 
-  // Press Straight Key
   const handleKeyDown = useCallback(() => {
     if (isKeyPressed) return;
     setIsKeyPressed(true);
@@ -77,15 +73,12 @@ export const KeyerTrainer: React.FC<KeyerTrainerProps> = ({
     });
   }, [isKeyPressed, onKeyingStateChange]);
 
-  // Release Straight Key
   const handleKeyUp = useCallback(() => {
     if (!isKeyPressed) return;
     setIsKeyPressed(false);
     onKeyingStateChange(false);
     const durationMs = audioEngine.stopManualTone();
-    lastReleaseTime.current = performance.now();
 
-    // Determine if it was dit or dah
     const isDah = durationMs > ditThresholdMs;
     const pulseType: 'dit' | 'dah' = isDah ? 'dah' : 'dit';
 
@@ -96,23 +89,20 @@ export const KeyerTrainer: React.FC<KeyerTrainerProps> = ({
       { type: pulseType, duration: Math.round(durationMs) },
     ]);
 
-    // Calculate rhythm ratio feedback
     const idealDuration = isDah ? timing.dahMs : timing.ditMs;
     const deviationRatio = durationMs / idealDuration;
     if (deviationRatio < 0.7) {
-      setRatioFeedback(isDah ? 'Dah was clipped short' : 'Dit was very brief');
+      setRatioFeedback(isDah ? 'Dah clipped short' : 'Dit very short');
     } else if (deviationRatio > 1.4) {
-      setRatioFeedback(isDah ? 'Dah held too long' : 'Dit too slow (approaching dah)');
+      setRatioFeedback(isDah ? 'Dah held too long' : 'Dit slow (nearing dah)');
     } else {
       setRatioFeedback(`Good rhythm (~${Math.round(durationMs)}ms)`);
     }
   }, [isKeyPressed, ditThresholdMs, appendSymbol, timing.dahMs, timing.ditMs, onKeyingStateChange]);
 
-  // Global Keyboard event listener for Spacebar (Straight key) and '[' / ']' (Iambic)
   useEffect(() => {
     const onGlobalKeyDown = (e: KeyboardEvent) => {
-      // Avoid keying if user is typing in an input
-      if ((e.target as HTMLElement).tagName === 'INPUT') return;
+      if ((e.target as HTMLElement).tagName === 'INPUT' || (e.target as HTMLElement).tagName === 'TEXTAREA') return;
 
       if (keyerType === 'straight' && (e.code === 'Space' || e.code === 'KeyK')) {
         e.preventDefault();
@@ -128,7 +118,7 @@ export const KeyerTrainer: React.FC<KeyerTrainerProps> = ({
     };
 
     const onGlobalKeyUp = (e: KeyboardEvent) => {
-      if ((e.target as HTMLElement).tagName === 'INPUT') return;
+      if ((e.target as HTMLElement).tagName === 'INPUT' || (e.target as HTMLElement).tagName === 'TEXTAREA') return;
 
       if (keyerType === 'straight' && (e.code === 'Space' || e.code === 'KeyK')) {
         e.preventDefault();
@@ -152,7 +142,6 @@ export const KeyerTrainer: React.FC<KeyerTrainerProps> = ({
     };
   }, [keyerType, handleKeyDown, handleKeyUp]);
 
-  // Handle Iambic auto-pulse generator
   useEffect(() => {
     if (keyerType === 'straight') {
       if (iambicIntervalRef.current) clearInterval(iambicIntervalRef.current);
@@ -171,7 +160,6 @@ export const KeyerTrainer: React.FC<KeyerTrainerProps> = ({
         audioEngine.playTone(timing.dahMs / 1000);
         appendSymbol('-');
       } else if (ditDown && dahDown) {
-        // Squeeze keying alternate
         audioEngine.playTone(timing.ditMs / 1000);
         appendSymbol('.');
         setTimeout(() => {
@@ -190,7 +178,7 @@ export const KeyerTrainer: React.FC<KeyerTrainerProps> = ({
     setDecodedText('');
     setCurrentBuffer('');
     setRecentPulses([]);
-    setRatioFeedback('Cleared');
+    setRatioFeedback('Ready to key');
   };
 
   const calculateTargetMatch = () => {
@@ -210,34 +198,54 @@ export const KeyerTrainer: React.FC<KeyerTrainerProps> = ({
   const matchAccuracy = calculateTargetMatch();
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 p-4">
-      {/* Keyer Type Bar */}
-      <div className="rounded-2xl border border-slate-800 bg-[#12141d] p-5 shadow-lg">
-        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-4">
+    <div className="mx-auto max-w-5xl space-y-6">
+      {/* Keyer Navigation & Target Challenge */}
+      <div className={`p-6 transition-all ${
+        isBrutal
+          ? 'rounded-3xl border-2 border-neutral-900 bg-white shadow-[4px_4px_0px_0px_#18181b]'
+          : isDark
+          ? 'rounded-3xl border border-white/[0.08] bg-[#141418] shadow-xl'
+          : 'rounded-3xl border border-neutral-200 bg-white shadow-sm'
+      }`}>
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b pb-4 mb-4 border-inherit">
           <div>
-            <span className="text-xs font-mono font-bold uppercase tracking-wider text-emerald-400">
-              Transmission Station (TX)
+            <span className={`text-[11px] font-mono font-black uppercase tracking-wider ${
+              isBrutal ? 'text-[#ff5500]' : isDark ? 'text-blue-400' : 'text-blue-600'
+            }`}>
+              Telegraphic Sending Station (TX)
             </span>
-            <h2 className="text-xl font-bold text-white mt-0.5">Morse Sending & Keying Trainer</h2>
+            <h2 className="text-xl font-black mt-0.5 tracking-tight">Morse Keying & Rhythm Lab</h2>
           </div>
 
           <div className="flex items-center gap-2">
             <button
               onClick={() => setKeyerType('straight')}
-              className={`rounded-xl px-4 py-2 text-xs font-semibold transition-all ${
+              className={`px-4 py-2 text-xs font-black rounded-xl transition-all ${
                 keyerType === 'straight'
-                  ? 'bg-emerald-500 text-slate-950 font-bold shadow-md shadow-emerald-500/20'
-                  : 'bg-[#181b26] text-slate-400 hover:text-white border border-slate-800'
+                  ? isBrutal
+                    ? 'bg-neutral-900 text-white border-2 border-neutral-900 shadow-[2px_2px_0px_0px_#ff5500]'
+                    : isDark
+                    ? 'bg-white text-neutral-950 shadow-md font-semibold'
+                    : 'bg-neutral-900 text-white shadow-sm font-semibold'
+                  : isBrutal
+                  ? 'bg-[#f5f4ee] text-neutral-900 border-2 border-neutral-900 hover:bg-[#ffcc00]'
+                  : 'bg-neutral-500/10 text-neutral-400 hover:text-white'
               }`}
             >
               Straight Key (Manual)
             </button>
             <button
               onClick={() => setKeyerType('iambic-a')}
-              className={`rounded-xl px-4 py-2 text-xs font-semibold transition-all ${
+              className={`px-4 py-2 text-xs font-black rounded-xl transition-all ${
                 keyerType !== 'straight'
-                  ? 'bg-emerald-500 text-slate-950 font-bold shadow-md shadow-emerald-500/20'
-                  : 'bg-[#181b26] text-slate-400 hover:text-white border border-slate-800'
+                  ? isBrutal
+                    ? 'bg-neutral-900 text-white border-2 border-neutral-900 shadow-[2px_2px_0px_0px_#ff5500]'
+                    : isDark
+                    ? 'bg-white text-neutral-950 shadow-md font-semibold'
+                    : 'bg-neutral-900 text-white shadow-sm font-semibold'
+                  : isBrutal
+                  ? 'bg-[#f5f4ee] text-neutral-900 border-2 border-neutral-900 hover:bg-[#ffcc00]'
+                  : 'bg-neutral-500/10 text-neutral-400 hover:text-white'
               }`}
             >
               Electronic Iambic Paddle
@@ -245,21 +253,27 @@ export const KeyerTrainer: React.FC<KeyerTrainerProps> = ({
           </div>
         </div>
 
-        {/* Target Transmission Challenge */}
-        <div className="mt-4 rounded-xl border border-slate-800 bg-[#171924] p-4 flex flex-wrap items-center justify-between gap-4">
+        {/* Challenge Target Card */}
+        <div className={`p-4 rounded-2xl flex flex-wrap items-center justify-between gap-4 transition-all ${
+          isBrutal
+            ? 'bg-[#f5f4ee] border-2 border-neutral-900 shadow-[2px_2px_0px_0px_#18181b]'
+            : isDark
+            ? 'bg-[#0d0d11] border border-white/[0.06]'
+            : 'bg-neutral-50 border border-neutral-200'
+        }`}>
           <div>
-            <div className="text-[11px] font-mono uppercase text-slate-400">
+            <div className="text-[10px] font-mono uppercase font-bold opacity-60">
               Transmission Target Practice
             </div>
-            <div className="font-mono text-lg font-bold text-amber-400 tracking-wider mt-0.5">
+            <div className="font-mono text-lg font-black tracking-wider mt-0.5 text-[#ff5500]">
               {targetSentence}
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <div className="text-right">
-              <span className="text-[11px] font-mono text-slate-400">Target Match</span>
-              <div className="text-lg font-bold font-mono text-emerald-400">{matchAccuracy}%</div>
+              <span className="text-[10px] font-mono uppercase opacity-60">Accuracy</span>
+              <div className="font-mono text-xl font-black">{matchAccuracy}%</div>
             </div>
             <button
               onClick={() => {
@@ -269,33 +283,41 @@ export const KeyerTrainer: React.FC<KeyerTrainerProps> = ({
                   'WX SUNNY TEMP 28C',
                   'QSL VIA BUREAU ES 73',
                   'ASOC EXAM TEST OK',
+                  'DE VU3ABC 73 SK',
                 ];
                 setTargetSentence(phrases[Math.floor(Math.random() * phrases.length)]);
                 clearDecoded();
               }}
-              className="rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs text-slate-300 hover:text-white"
+              className={`px-3 py-1.5 font-bold text-xs rounded-xl ${
+                isBrutal ? 'bg-white border-2 border-neutral-900 shadow-[1px_1px_0px_0px_#18181b]' : 'bg-neutral-200/50'
+              }`}
             >
-              Change Target
+              New Target
             </button>
           </div>
         </div>
       </div>
 
-      {/* Hardware Keying Surface */}
-      <div className="rounded-2xl border border-slate-800 bg-[#12141d] p-6 shadow-xl">
-        {/* Straight Key Mode */}
+      {/* Physical Keyer Surface */}
+      <div className={`p-8 transition-all ${
+        isBrutal
+          ? 'rounded-3xl border-2 border-neutral-900 bg-white shadow-[6px_6px_0px_0px_#18181b]'
+          : isDark
+          ? 'rounded-3xl border border-white/[0.08] bg-[#141418] shadow-2xl'
+          : 'rounded-3xl border border-neutral-200 bg-white shadow-md'
+      }`}>
         {keyerType === 'straight' ? (
           <div className="flex flex-col items-center justify-center py-6">
             <div className="text-center mb-6">
-              <span className="text-xs font-mono uppercase text-slate-400">
-                Operate using <strong>[Spacebar]</strong> or <strong>[Click / Hold Pad]</strong>
+              <span className="text-xs font-mono font-bold uppercase tracking-wider opacity-70">
+                Operate using <strong>[Spacebar]</strong> or <strong>[Tap & Hold Brass Pad]</strong>
               </span>
-              <p className="text-[11px] text-slate-500 mt-1">
+              <p className="text-[11px] font-mono opacity-50 mt-1">
                 Target Cadence: {settings.charWpm} WPM (Dit = ~{Math.round(timing.ditMs)}ms, Dah = ~{Math.round(timing.dahMs)}ms)
               </p>
             </div>
 
-            {/* Tactile Hardware Straight Key Pad */}
+            {/* Tactile Hardware Straight Key Button */}
             <button
               type="button"
               onMouseDown={handleKeyDown}
@@ -308,25 +330,31 @@ export const KeyerTrainer: React.FC<KeyerTrainerProps> = ({
                 e.preventDefault();
                 handleKeyUp();
               }}
-              className={`relative flex h-44 w-72 flex-col items-center justify-center rounded-3xl border-2 transition-all select-none shadow-2xl ${
-                isKeyPressed
-                  ? 'border-emerald-400 bg-gradient-to-b from-emerald-600/30 to-emerald-950/60 translate-y-2 shadow-[0_0_25px_rgba(16,185,129,0.5)]'
-                  : 'border-slate-700 bg-gradient-to-b from-[#1e2233] to-[#12141e] hover:border-slate-500 active:translate-y-2'
+              className={`relative flex h-48 w-80 flex-col items-center justify-center select-none transition-all ${
+                isBrutal
+                  ? isKeyPressed
+                    ? 'rounded-3xl border-2 border-neutral-900 bg-[#ff5500] text-white translate-x-[4px] translate-y-[4px] shadow-[0px_0px_0px_0px_#18181b]'
+                    : 'rounded-3xl border-2 border-neutral-900 bg-[#ffcc00] text-neutral-900 shadow-[6px_6px_0px_0px_#18181b] hover:translate-x-[-1px] hover:translate-y-[-1px]'
+                  : isDark
+                  ? isKeyPressed
+                    ? 'rounded-3xl border-2 border-blue-500 bg-blue-600/30 text-white shadow-[0_0_30px_rgba(59,130,246,0.6)] scale-95'
+                    : 'rounded-3xl border border-white/[0.1] bg-white/[0.05] text-white hover:bg-white/[0.08] shadow-xl'
+                  : isKeyPressed
+                  ? 'rounded-3xl border-2 border-blue-600 bg-blue-50 text-blue-900 scale-95 shadow-inner'
+                  : 'rounded-3xl border border-neutral-300 bg-neutral-100 text-neutral-900 hover:bg-neutral-200 shadow-md'
               }`}
             >
-              {/* Hardware Brass Pivot & Knob representation */}
-              <div
-                className={`h-16 w-16 rounded-full border-4 transition-all shadow-inner ${
-                  isKeyPressed
-                    ? 'border-emerald-400 bg-emerald-500/40 scale-95'
-                    : 'border-amber-500/70 bg-gradient-to-br from-amber-600 to-amber-800'
-                }`}
-              />
-              <span
-                className={`mt-3 font-mono text-xs font-bold tracking-widest uppercase transition-colors ${
-                  isKeyPressed ? 'text-emerald-300' : 'text-slate-300'
-                }`}
-              >
+              <div className={`h-16 w-16 rounded-full border-4 flex items-center justify-center transition-all ${
+                isKeyPressed
+                  ? 'border-neutral-900 bg-white scale-90'
+                  : isBrutal
+                  ? 'border-neutral-900 bg-[#ff5500]'
+                  : 'border-blue-400 bg-blue-500/20'
+              }`}>
+                <Zap className={`h-7 w-7 ${isKeyPressed ? 'fill-neutral-900 text-neutral-900' : 'text-white'}`} />
+              </div>
+
+              <span className="mt-4 font-mono text-xs font-black tracking-widest uppercase">
                 {isKeyPressed ? 'CARRIER ACTIVE (ON)' : 'PRESS TO TRANSMIT'}
               </span>
             </button>
@@ -335,11 +363,11 @@ export const KeyerTrainer: React.FC<KeyerTrainerProps> = ({
           /* Electronic Iambic Paddle Mode */
           <div className="flex flex-col items-center justify-center py-6">
             <div className="text-center mb-6">
-              <span className="text-xs font-mono uppercase text-slate-400">
-                Paddles: <strong>Left [Z] or [[]</strong> for Dit • <strong>Right [/] or []]</strong> for Dah
+              <span className="text-xs font-mono font-bold uppercase tracking-wider opacity-70">
+                Paddles: <strong>Left [Z] / [[]</strong> for Dit • <strong>Right [/] / []]</strong> for Dah
               </span>
-              <p className="text-[11px] text-slate-500 mt-1">
-                Auto-pulse generated at calibrated {settings.charWpm} WPM with Squeeze Keying
+              <p className="text-[11px] font-mono opacity-50 mt-1">
+                Auto-pulsed at calibrated {settings.charWpm} WPM with Squeeze Keying
               </p>
             </div>
 
@@ -353,11 +381,15 @@ export const KeyerTrainer: React.FC<KeyerTrainerProps> = ({
                 onMouseUp={() => {
                   paddleDitPressed.current = false;
                 }}
-                className="flex h-36 w-36 flex-col items-center justify-center rounded-2xl border-2 border-amber-500/40 bg-[#1a1d2c] hover:bg-[#202538] active:translate-y-1 shadow-lg"
+                className={`flex h-40 w-40 flex-col items-center justify-center rounded-3xl transition-all ${
+                  isBrutal
+                    ? 'border-2 border-neutral-900 bg-[#ffcc00] text-neutral-900 shadow-[4px_4px_0px_0px_#18181b] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[1px_1px_0px_0px_#18181b]'
+                    : 'border border-white/[0.1] bg-white/[0.05] hover:bg-white/[0.08] active:scale-95 shadow-xl text-white'
+                }`}
               >
-                <div className="h-6 w-6 rounded-full bg-amber-400 shadow-[0_0_10px_#f59e0b]" />
-                <span className="mt-2 font-mono text-sm font-bold text-white">DIT PADDLE</span>
-                <span className="text-[10px] font-mono text-slate-400">[Key Z / []</span>
+                <div className="h-6 w-6 rounded-full bg-[#ff5500] mb-2" />
+                <span className="font-mono text-sm font-black">DIT PADDLE</span>
+                <span className="text-[10px] font-mono opacity-60">[Key Z / []</span>
               </button>
 
               {/* Dah Paddle */}
@@ -369,72 +401,90 @@ export const KeyerTrainer: React.FC<KeyerTrainerProps> = ({
                 onMouseUp={() => {
                   paddleDahPressed.current = false;
                 }}
-                className="flex h-36 w-36 flex-col items-center justify-center rounded-2xl border-2 border-emerald-500/40 bg-[#1a1d2c] hover:bg-[#202538] active:translate-y-1 shadow-lg"
+                className={`flex h-40 w-40 flex-col items-center justify-center rounded-3xl transition-all ${
+                  isBrutal
+                    ? 'border-2 border-neutral-900 bg-[#ff5500] text-white shadow-[4px_4px_0px_0px_#18181b] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[1px_1px_0px_0px_#18181b]'
+                    : 'border border-white/[0.1] bg-white/[0.05] hover:bg-white/[0.08] active:scale-95 shadow-xl text-white'
+                }`}
               >
-                <div className="h-4 w-12 rounded-full bg-emerald-400 shadow-[0_0_10px_#10b981]" />
-                <span className="mt-3 font-mono text-sm font-bold text-white">DAH PADDLE</span>
-                <span className="text-[10px] font-mono text-slate-400">[Key / / ]]</span>
+                <div className="h-3 w-10 rounded-full bg-emerald-400 mb-3" />
+                <span className="font-mono text-sm font-black">DAH PADDLE</span>
+                <span className="text-[10px] font-mono opacity-60">[Key / / ]]</span>
               </button>
             </div>
           </div>
         )}
 
-        {/* Real-time Rhythm & Timing Feedback Gauge */}
-        <div className="mt-4 rounded-xl border border-slate-800 bg-[#0d0f17] p-4 flex flex-wrap items-center justify-between gap-4 font-mono text-xs">
+        {/* Real-time Rhythm & Buffer Status */}
+        <div className={`mt-4 p-4 rounded-2xl flex flex-wrap items-center justify-between gap-4 font-mono text-xs font-bold transition-all ${
+          isBrutal
+            ? 'bg-[#f5f4ee] border-2 border-neutral-900 shadow-[2px_2px_0px_0px_#18181b]'
+            : isDark
+            ? 'bg-[#0d0d11] border border-white/[0.06]'
+            : 'bg-neutral-50 border border-neutral-200'
+        }`}>
           <div className="flex items-center gap-2">
-            <Activity className="h-4 w-4 text-emerald-400" />
-            <span className="text-slate-400">Rhythm Cadence:</span>
-            <span className="font-bold text-emerald-400">{ratioFeedback}</span>
+            <Activity className="h-4 w-4 text-[#ff5500]" />
+            <span className="opacity-60">Rhythm Cadence:</span>
+            <span className="font-black text-[#ff5500]">{ratioFeedback}</span>
           </div>
 
-          <div className="flex items-center gap-2 text-slate-500">
-            <span>Buffer: </span>
-            <span className="font-mono text-amber-400 text-sm font-bold tracking-widest min-w-8">
+          <div className="flex items-center gap-2">
+            <span className="opacity-60">Morse Buffer:</span>
+            <span className="font-mono text-base font-black tracking-widest text-[#ff5500] min-w-8">
               {currentBuffer || '—'}
             </span>
           </div>
         </div>
 
-        {/* Recent Pulses Visual Strip */}
+        {/* Pulse Strip */}
         <div className="mt-4">
-          <span className="text-[10px] font-mono uppercase text-slate-500">Pulse Stream (Last 12)</span>
-          <div className="mt-1.5 flex h-10 items-center gap-1.5 rounded-lg border border-slate-800 bg-[#090b10] px-3 overflow-x-auto">
+          <span className="text-[10px] font-mono uppercase opacity-60 font-bold">Recent Key Pulses</span>
+          <div className={`mt-1.5 flex h-12 items-center gap-1.5 px-3 overflow-x-auto rounded-xl ${
+            isBrutal ? 'bg-[#f5f4ee] border-2 border-neutral-900' : 'bg-neutral-900/50 border border-neutral-800'
+          }`}>
             {recentPulses.length === 0 ? (
-              <span className="text-xs text-slate-600 font-mono">No pulses recorded yet...</span>
+              <span className="text-xs opacity-50 font-mono">Tap key above to record pulses...</span>
             ) : (
               recentPulses.map((p, i) => (
                 <div
                   key={i}
-                  className={`flex flex-col items-center justify-center rounded px-2 py-0.5 font-mono text-[10px] font-bold ${
+                  className={`flex flex-col items-center justify-center rounded-lg px-2 py-0.5 font-mono text-[10px] font-bold ${
                     p.type === 'dit'
-                      ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                      : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                      ? 'bg-[#ffcc00] text-neutral-900 border border-neutral-900'
+                      : 'bg-[#ff5500] text-white border border-neutral-900'
                   }`}
                 >
                   <span>{p.type === 'dit' ? '•' : '—'}</span>
-                  <span className="text-[8px] opacity-70">{p.duration}ms</span>
+                  <span className="text-[8px] opacity-80">{p.duration}ms</span>
                 </div>
               ))
             )}
           </div>
         </div>
 
-        {/* Live Decoded Output Stream */}
-        <div className="mt-5 rounded-xl border border-slate-800 bg-[#0c0d14] p-5">
-          <div className="flex items-center justify-between text-[11px] font-mono uppercase tracking-wider text-slate-500 mb-2">
+        {/* Live Decoded Output */}
+        <div className={`mt-6 p-6 rounded-2xl transition-all ${
+          isBrutal
+            ? 'bg-[#f5f4ee] border-2 border-neutral-900 shadow-[2px_2px_0px_0px_#18181b]'
+            : isDark
+            ? 'bg-[#0d0d11] border border-white/[0.06]'
+            : 'bg-neutral-50 border border-neutral-200'
+        }`}>
+          <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-wider opacity-60 mb-2 font-bold">
             <span>Live Decoded Telegraphic Stream</span>
             <button
               onClick={clearDecoded}
-              className="flex items-center gap-1 text-slate-400 hover:text-rose-400 transition-colors"
+              className="flex items-center gap-1 opacity-70 hover:opacity-100 hover:text-rose-500 transition-colors"
             >
-              <Trash2 className="h-3 w-3" />
+              <Trash2 className="h-3.5 w-3.5" />
               <span>Clear</span>
             </button>
           </div>
-          <div className="font-mono text-2xl tracking-widest text-emerald-400 min-h-12 flex items-center break-all select-all">
+          <div className="font-mono text-2xl font-black tracking-widest min-h-12 flex items-center break-all select-all">
             {decodedText || (
-              <span className="text-slate-600 text-sm font-sans italic">
-                Decoded characters will appear here as you key...
+              <span className="opacity-40 text-sm font-sans font-normal italic">
+                Decoded characters will appear here as you tap...
               </span>
             )}
           </div>

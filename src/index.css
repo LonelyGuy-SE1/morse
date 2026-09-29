@@ -1,70 +1,152 @@
 @import "tailwindcss";
 
 @layer base {
-  :root {
-    --bg-main: #0c0d12;
-    --bg-card: #14161f;
-    --bg-card-hover: #1c1f2c;
-    --border-main: #272a3b;
-    --border-accent: #3b82f6;
-    --accent-amber: #f59e0b;
+  /* Default Neo-Brutalist Theme */
+  body.theme-neo-brutal {
+    --bg-page: #f5f4ee;
+    --bg-surface: #ffffff;
+    --bg-surface-elevated: #faf9f5;
+    --bg-surface-sunken: #edece5;
+    --border-main: #18181b;
+    --border-width: 2px;
+    --text-main: #18181b;
+    --text-muted: #52525b;
+    --accent-orange: #ff5500;
+    --accent-yellow: #ffcc00;
     --accent-green: #10b981;
-    --accent-cyan: #06b6d4;
-    --text-primary: #f8fafc;
-    --text-secondary: #94a3b8;
+    --accent-blue: #2563eb;
+    --shadow-solid: 4px 4px 0px 0px #18181b;
+    --shadow-solid-lg: 6px 6px 0px 0px #18181b;
+    --shadow-solid-sm: 2px 2px 0px 0px #18181b;
+    background-color: var(--bg-page);
+    color: var(--text-main);
+  }
+
+  /* Apple Dark Studio Theme */
+  body.theme-apple-dark {
+    --bg-page: #09090b;
+    --bg-surface: #141417;
+    --bg-surface-elevated: #1c1c20;
+    --bg-surface-sunken: #0d0d10;
+    --border-main: rgba(255, 255, 255, 0.1);
+    --border-width: 1px;
+    --text-main: #f8fafc;
+    --text-muted: #a1a1aa;
+    --accent-orange: #f97316;
+    --accent-yellow: #eab308;
+    --accent-green: #22c55e;
+    --accent-blue: #3b82f6;
+    --shadow-solid: 0 10px 30px -10px rgba(0, 0, 0, 0.7);
+    --shadow-solid-lg: 0 20px 40px -15px rgba(0, 0, 0, 0.8);
+    --shadow-solid-sm: 0 4px 12px -2px rgba(0, 0, 0, 0.5);
+    background-color: var(--bg-page);
+    color: var(--text-main);
+  }
+
+  /* Apple Clean Light Theme */
+  body.theme-apple-light {
+    --bg-page: #f8fafc;
+    --bg-surface: #ffffff;
+    --bg-surface-elevated: #ffffff;
+    --bg-surface-sunken: #f1f5f9;
+    --border-main: #e2e8f0;
+    --border-width: 1px;
+    --text-main: #0f172a;
     --text-muted: #64748b;
+    --accent-orange: #ea580c;
+    --accent-yellow: #ca8a04;
+    --accent-green: #16a34a;
+    --accent-blue: #2563eb;
+    --shadow-solid: 0 4px 16px -4px rgba(0, 0, 0, 0.08);
+    --shadow-solid-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    --shadow-solid-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+    background-color: var(--bg-page);
+    color: var(--text-main);
   }
 
   body {
-    background-color: var(--bg-main);
-    color: var(--text-primary);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     user-select: none;
     -webkit-user-select: none;
     overflow-x: hidden;
+    min-height: 100vh;
+    transition: background-color 0.2s ease, color 0.2s ease;
   }
 }
 
-/* Custom scrollbar */
+/* Custom Scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #0c0d12;
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #272a3b;
-  border-radius: 3px;
+  background: rgba(120, 120, 120, 0.25);
+  border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #3b425b;
+  background: rgba(120, 120, 120, 0.45);
 }
 
-/* Phosphor Glow and Tactile Utilities */
-.glow-amber {
-  box-shadow: 0 0 15px rgba(245, 158, 11, 0.35);
+/* Tactile Push Button Effect for Neo-Brutalist */
+.theme-neo-brutal .btn-tactile {
+  border: 2px solid #18181b;
+  box-shadow: 3px 3px 0px 0px #18181b;
+  transition: all 0.06s ease;
+}
+.theme-neo-brutal .btn-tactile:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0px 0px #18181b;
+}
+.theme-neo-brutal .btn-tactile:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0px 0px #18181b;
 }
 
-.glow-green {
-  box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+.theme-apple-dark .btn-tactile {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: all 0.15s ease;
+}
+.theme-apple-dark .btn-tactile:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+.theme-apple-dark .btn-tactile:active {
+  transform: scale(0.98);
 }
 
-.glow-cyan {
-  box-shadow: 0 0 15px rgba(6, 182, 212, 0.35);
+.theme-apple-light .btn-tactile {
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.15s ease;
+}
+.theme-apple-light .btn-tactile:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+.theme-apple-light .btn-tactile:active {
+  transform: scale(0.98);
 }
 
-.tactile-btn {
-  transition: all 0.08s ease-in-out;
-  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+/* Mechanical Keyer Pad Animation */
+.theme-neo-brutal .keyer-press {
+  transform: translate(3px, 3px);
+  box-shadow: 0px 0px 0px 0px #18181b !important;
 }
 
-.tactile-btn:active {
-  transform: translateY(2px);
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+.theme-apple-dark .keyer-press {
+  transform: scale(0.97);
+  box-shadow: 0 0 25px rgba(59, 130, 246, 0.5) !important;
+  border-color: #3b82f6 !important;
 }
 
-.keyer-paddle-active {
-  transform: translateY(3px) scale(0.99);
-  box-shadow: 0 0 12px rgba(245, 158, 11, 0.6), inset 0 2px 4px rgba(0,0,0,0.5);
+.theme-apple-light .keyer-press {
+  transform: scale(0.97);
+  box-shadow: 0 0 20px rgba(37, 99, 235, 0.3) !important;
+  border-color: #2563eb !important;
 }
