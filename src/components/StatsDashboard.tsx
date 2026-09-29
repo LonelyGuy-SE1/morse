@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { UserStats, ThemeMode } from '../types/morse';
+import type { UserStats } from '../types/morse';
 import { StorageService } from '../services/storageService';
 import { 
   Clock, 
@@ -15,17 +15,13 @@ import {
 
 interface StatsDashboardProps {
   stats: UserStats;
-  theme?: ThemeMode;
   onRefresh: () => void;
 }
 
-export const StatsDashboard = ({ stats, theme = 'neo-brutal', onRefresh }: StatsDashboardProps) => {
+export const StatsDashboard = ({ stats, onRefresh }: StatsDashboardProps) => {
   const [importText, setImportText] = useState<string>('');
   const [showImport, setShowImport] = useState<boolean>(false);
   const [message, setMessage] = useState<string | null>(null);
-
-  const isBrutal = theme === 'neo-brutal';
-  const isDark = theme === 'apple-dark';
 
   const formatDuration = (totalSec: number) => {
     const hours = Math.floor(totalSec / 3600);
@@ -40,7 +36,7 @@ export const StatsDashboard = ({ stats, theme = 'neo-brutal', onRefresh }: Stats
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `ditdah-cw-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.download = `morse-academy-backup-${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -76,18 +72,10 @@ export const StatsDashboard = ({ stats, theme = 'neo-brutal', onRefresh }: Stats
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       {/* Top Telemetry Header */}
-      <div className={`p-6 transition-all ${
-        isBrutal
-          ? 'rounded-3xl border-2 border-neutral-900 bg-white shadow-[4px_4px_0px_0px_#18181b]'
-          : isDark
-          ? 'rounded-3xl border border-white/[0.08] bg-[#141418] shadow-xl'
-          : 'rounded-3xl border border-neutral-200 bg-white shadow-sm'
-      }`}>
+      <div className="p-6 rounded-3xl border-2 border-neutral-900 bg-white shadow-[4px_4px_0px_0px_#18181b]">
         <div className="flex flex-wrap items-center justify-between gap-4 border-b pb-4 mb-5 border-inherit">
           <div>
-            <span className={`text-[11px] font-mono font-black uppercase tracking-wider ${
-              isBrutal ? 'text-[#ff5500]' : 'text-blue-500'
-            }`}>
+            <span className="text-[11px] font-mono font-black uppercase tracking-wider text-[#ff5500]">
               Telemetry & Analytics
             </span>
             <h2 className="text-xl font-black mt-0.5 tracking-tight">Performance Dashboard</h2>
@@ -96,22 +84,14 @@ export const StatsDashboard = ({ stats, theme = 'neo-brutal', onRefresh }: Stats
           <div className="flex items-center gap-2">
             <button
               onClick={handleExport}
-              className={`flex items-center gap-1.5 px-3.5 py-2 font-bold text-xs rounded-xl transition-all ${
-                isBrutal
-                  ? 'bg-[#f5f4ee] border-2 border-neutral-900 shadow-[2px_2px_0px_0px_#18181b] hover:bg-[#ffcc00]'
-                  : 'bg-white/[0.08] text-white hover:bg-white/[0.12]'
-              }`}
+              className="flex items-center gap-1.5 px-3.5 py-2 font-bold text-xs rounded-xl bg-[#f5f4ee] border-2 border-neutral-900 shadow-[2px_2px_0px_0px_#18181b] hover:bg-[#ffcc00]"
             >
               <Download className="h-3.5 w-3.5" />
               <span>Export JSON</span>
             </button>
             <button
               onClick={() => setShowImport(!showImport)}
-              className={`flex items-center gap-1.5 px-3.5 py-2 font-bold text-xs rounded-xl transition-all ${
-                isBrutal
-                  ? 'bg-[#f5f4ee] border-2 border-neutral-900 shadow-[2px_2px_0px_0px_#18181b] hover:bg-[#ffcc00]'
-                  : 'bg-white/[0.08] text-white hover:bg-white/[0.12]'
-              }`}
+              className="flex items-center gap-1.5 px-3.5 py-2 font-bold text-xs rounded-xl bg-[#f5f4ee] border-2 border-neutral-900 shadow-[2px_2px_0px_0px_#18181b] hover:bg-[#ffcc00]"
             >
               <Upload className="h-3.5 w-3.5" />
               <span>Import</span>
@@ -163,9 +143,7 @@ export const StatsDashboard = ({ stats, theme = 'neo-brutal', onRefresh }: Stats
 
         {/* 4 Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className={`p-4 rounded-2xl ${
-            isBrutal ? 'bg-[#f5f4ee] border-2 border-neutral-900 shadow-[2px_2px_0px_0px_#18181b]' : 'bg-white/[0.03] border border-white/[0.06]'
-          }`}>
+          <div className="p-4 rounded-2xl bg-[#f5f4ee] border-2 border-neutral-900 shadow-[2px_2px_0px_0px_#18181b]">
             <div className="flex items-center gap-2 text-xs opacity-70 font-bold">
               <Clock className="h-4 w-4 text-[#ff5500]" />
               <span>Practice Time</span>
@@ -175,9 +153,7 @@ export const StatsDashboard = ({ stats, theme = 'neo-brutal', onRefresh }: Stats
             </div>
           </div>
 
-          <div className={`p-4 rounded-2xl ${
-            isBrutal ? 'bg-[#f5f4ee] border-2 border-neutral-900 shadow-[2px_2px_0px_0px_#18181b]' : 'bg-white/[0.03] border border-white/[0.06]'
-          }`}>
+          <div className="p-4 rounded-2xl bg-[#f5f4ee] border-2 border-neutral-900 shadow-[2px_2px_0px_0px_#18181b]">
             <div className="flex items-center gap-2 text-xs opacity-70 font-bold">
               <Flame className="h-4 w-4 text-[#ffcc00]" />
               <span>Drill Sessions</span>
@@ -187,9 +163,7 @@ export const StatsDashboard = ({ stats, theme = 'neo-brutal', onRefresh }: Stats
             </div>
           </div>
 
-          <div className={`p-4 rounded-2xl ${
-            isBrutal ? 'bg-[#f5f4ee] border-2 border-neutral-900 shadow-[2px_2px_0px_0px_#18181b]' : 'bg-white/[0.03] border border-white/[0.06]'
-          }`}>
+          <div className="p-4 rounded-2xl bg-[#f5f4ee] border-2 border-neutral-900 shadow-[2px_2px_0px_0px_#18181b]">
             <div className="flex items-center gap-2 text-xs opacity-70 font-bold">
               <Headphones className="h-4 w-4 text-emerald-500" />
               <span>Characters Copied</span>
@@ -199,9 +173,7 @@ export const StatsDashboard = ({ stats, theme = 'neo-brutal', onRefresh }: Stats
             </div>
           </div>
 
-          <div className={`p-4 rounded-2xl ${
-            isBrutal ? 'bg-[#f5f4ee] border-2 border-neutral-900 shadow-[2px_2px_0px_0px_#18181b]' : 'bg-white/[0.03] border border-white/[0.06]'
-          }`}>
+          <div className="p-4 rounded-2xl bg-[#f5f4ee] border-2 border-neutral-900 shadow-[2px_2px_0px_0px_#18181b]">
             <div className="flex items-center gap-2 text-xs opacity-70 font-bold">
               <Award className="h-4 w-4 text-purple-500" />
               <span>Koch Mastery</span>
@@ -214,22 +186,14 @@ export const StatsDashboard = ({ stats, theme = 'neo-brutal', onRefresh }: Stats
       </div>
 
       {/* Weak Characters Heatmap */}
-      <div className={`p-6 transition-all ${
-        isBrutal
-          ? 'rounded-3xl border-2 border-neutral-900 bg-white shadow-[4px_4px_0px_0px_#18181b]'
-          : isDark
-          ? 'rounded-3xl border border-white/[0.08] bg-[#141418] shadow-xl'
-          : 'rounded-3xl border border-neutral-200 bg-white shadow-sm'
-      }`}>
+      <div className="p-6 rounded-3xl border-2 border-neutral-900 bg-white shadow-[4px_4px_0px_0px_#18181b]">
         <h3 className="text-base font-black flex items-center gap-2 border-b pb-3 mb-4 border-inherit">
           <AlertCircle className="h-4 w-4 text-[#ff5500]" />
           <span>Cadence Weak Spots (Characters Needing Extra Practice)</span>
         </h3>
 
         {weakChars.length === 0 ? (
-          <div className={`p-4 rounded-2xl flex items-center gap-3 ${
-            isBrutal ? 'bg-[#ffcc00] border-2 border-neutral-900 text-neutral-900 font-bold' : 'bg-emerald-500/10 text-emerald-400'
-          }`}>
+          <div className="p-4 rounded-2xl flex items-center gap-3 bg-[#ffcc00] border-2 border-neutral-900 text-neutral-900 font-bold">
             <CheckCircle2 className="h-5 w-5 shrink-0" />
             <span className="text-xs">
               Excellent rhythm! No severe weak characters detected. Maintain regular daily training!
@@ -240,9 +204,7 @@ export const StatsDashboard = ({ stats, theme = 'neo-brutal', onRefresh }: Stats
             {weakChars.map((item) => (
               <div
                 key={item.char}
-                className={`p-3 rounded-2xl text-center ${
-                  isBrutal ? 'bg-[#f5f4ee] border-2 border-neutral-900 shadow-[2px_2px_0px_0px_#18181b]' : 'bg-rose-950/20 border border-rose-500/20'
-                }`}
+                className="p-3 rounded-2xl text-center bg-[#f5f4ee] border-2 border-neutral-900 shadow-[2px_2px_0px_0px_#18181b]"
               >
                 <div className="font-mono text-2xl font-black text-rose-500">{item.char}</div>
                 <div className="font-mono text-xs font-bold mt-1">{item.accuracy}% Acc</div>
@@ -254,13 +216,7 @@ export const StatsDashboard = ({ stats, theme = 'neo-brutal', onRefresh }: Stats
       </div>
 
       {/* Training History */}
-      <div className={`p-6 transition-all ${
-        isBrutal
-          ? 'rounded-3xl border-2 border-neutral-900 bg-white shadow-[4px_4px_0px_0px_#18181b]'
-          : isDark
-          ? 'rounded-3xl border border-white/[0.08] bg-[#141418] shadow-xl'
-          : 'rounded-3xl border border-neutral-200 bg-white shadow-sm'
-      }`}>
+      <div className="p-6 rounded-3xl border-2 border-neutral-900 bg-white shadow-[4px_4px_0px_0px_#18181b]">
         <h3 className="text-base font-black border-b pb-3 mb-4 border-inherit">
           Recent Training Log
         </h3>

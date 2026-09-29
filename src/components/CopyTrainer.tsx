@@ -42,8 +42,8 @@ export const CopyTrainer = ({ settings, onStatsUpdate }: CopyTrainerProps) => {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const sessionStartTime = useRef<number>(0);
 
-  const isBrutal = settings.theme === 'neo-brutal';
-  const isDark = settings.theme === 'apple-dark';
+  const isBrutal = true;
+  const isDark = false;
 
   const generateNextTarget = useCallback(() => {
     audioEngine.stopSequence();
@@ -258,7 +258,7 @@ export const CopyTrainer = ({ settings, onStatsUpdate }: CopyTrainerProps) => {
               }}
               className="text-[11px] font-mono mt-2 underline opacity-70 hover:opacity-100 block"
             >
-              + Load Sample ASOC Telegraph Message
+              + Load Sample Telegraph Message
             </button>
           </div>
         )}

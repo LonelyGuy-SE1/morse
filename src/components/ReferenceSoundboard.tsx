@@ -22,8 +22,8 @@ export const ReferenceSoundboard = ({ settings }: ReferenceSoundboardProps) => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [activePlayingChar, setActivePlayingChar] = useState<string | null>(null);
 
-  const isBrutal = settings.theme === 'neo-brutal';
-  const isDark = settings.theme === 'apple-dark';
+  const isBrutal = true;
+  const isDark = false;
 
   const handlePlayChar = async (char: string) => {
     setActivePlayingChar(char);

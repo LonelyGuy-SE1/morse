@@ -27,7 +27,6 @@ export class CwAudioEngine {
     hfNoiseEnabled: false,
     hfNoiseVolume: 0.15,
     attackDecayMs: 5,
-    theme: 'neo-brutal',
   };
 
   constructor(initialSettings?: Partial<AudioSettings>) {

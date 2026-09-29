@@ -33,8 +33,8 @@ export const KeyerTrainer = ({
   const paddleDitPressed = useRef<boolean>(false);
   const paddleDahPressed = useRef<boolean>(false);
 
-  const isBrutal = settings.theme === 'neo-brutal';
-  const isDark = settings.theme === 'apple-dark';
+  const isBrutal = true;
+  const isDark = false;
 
   const timing = audioEngine.calculateTiming(settings.charWpm, settings.effectiveWpm);
   const ditThresholdMs = timing.ditMs * 1.8;
@@ -282,7 +282,7 @@ export const KeyerTrainer = ({
                   'UR RST 599 599 73',
                   'WX SUNNY TEMP 28C',
                   'QSL VIA BUREAU ES 73',
-                  'ASOC EXAM TEST OK',
+                  'SPEED EXAM TEST OK',
                   'DE VU3ABC 73 SK',
                 ];
                 setTargetSentence(phrases[Math.floor(Math.random() * phrases.length)]);

@@ -11,7 +11,6 @@ export const DEFAULT_SETTINGS: AudioSettings = {
   hfNoiseEnabled: false,
   hfNoiseVolume: 0.12,
   attackDecayMs: 5,
-  theme: 'neo-brutal',
 };
 
 export const DEFAULT_STATS: UserStats = {

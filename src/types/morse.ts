@@ -30,8 +30,6 @@ export interface KochLesson {
   description: string;
 }
 
-export type ThemeMode = 'apple-dark' | 'neo-brutal' | 'apple-light';
-
 export interface AudioSettings {
   pitch: number;            // Hz (default 650)
   charWpm: number;          // Target character speed (default 20)
@@ -40,7 +38,6 @@ export interface AudioSettings {
   hfNoiseEnabled: boolean;  // HF radio atmospheric static simulation
   hfNoiseVolume: number;    // 0.0 - 0.5
   attackDecayMs: number;    // Click suppression envelope time (default 5ms)
-  theme: ThemeMode;         // 'apple-dark' | 'neo-brutal' | 'apple-light'
 }
 
 export interface UserStats {
@@ -51,18 +48,18 @@ export interface UserStats {
   accuracyHistory: { date: string; accuracy: number; wpm: number; mode: string }[];
   charAccuracyMap: Record<string, { attempts: number; correct: number }>;
   kochLevelUnlocked: number;
-  examScores: AsocExamResult[];
+  examScores: ExamResult[];
 }
 
-export interface AsocExamConfig {
-  grade: 'general' | 'restricted'; // General: 12-20 WPM, Restricted: 8-10 WPM
+export interface ExamConfig {
+  grade: 'novice' | 'general' | 'master'; // Novice: 8 WPM, General: 12 WPM, Master: 20 WPM
   wpm: number;
   durationMinutes: number;
   groupCount: number;             // standard 5-character cipher groups
   plainTextWordCount: number;
 }
 
-export interface AsocExamResult {
+export interface ExamResult {
   id: string;
   date: string;
   grade: string;
@@ -78,6 +75,9 @@ export interface AsocExamResult {
   };
   details: string;
 }
+
+// Backward-compatibility alias
+export type AsocExamResult = ExamResult;
 
 export interface TimingPulse {
   type: 'dit' | 'dah';

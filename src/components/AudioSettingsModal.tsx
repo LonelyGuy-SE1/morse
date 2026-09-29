@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import type { AudioSettings, ThemeMode } from '../types/morse';
+import type { AudioSettings } from '../types/morse';
 import { audioEngine } from '../services/audioEngine';
 import { StorageService } from '../services/storageService';
-import { Volume2, Sliders, Radio, Zap, X, RotateCcw, Palette } from 'lucide-react';
+import { Volume2, Sliders, Radio, Zap, X, RotateCcw } from 'lucide-react';
 
 interface AudioSettingsModalProps {
   isOpen: boolean;
@@ -21,10 +21,7 @@ export const AudioSettingsModal = ({
 
   if (!isOpen) return null;
 
-  const isBrutal = localSettings.theme === 'neo-brutal';
-  const isDark = localSettings.theme === 'apple-dark';
-
-  const handleChange = (key: keyof AudioSettings, value: number | boolean | ThemeMode) => {
+  const handleChange = (key: keyof AudioSettings, value: number | boolean) => {
     const updated = { ...localSettings, [key]: value };
     setLocalSettings(updated);
     audioEngine.updateSettings(updated);
@@ -48,7 +45,6 @@ export const AudioSettingsModal = ({
       hfNoiseEnabled: false,
       hfNoiseVolume: 0.12,
       attackDecayMs: 5,
-      theme: 'neo-brutal',
     };
     setLocalSettings(defaults);
     audioEngine.updateSettings(defaults);
@@ -58,23 +54,15 @@ export const AudioSettingsModal = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-150">
-      <div className={`relative w-full max-w-lg p-6 transition-all ${
-        isBrutal
-          ? 'rounded-3xl border-2 border-neutral-900 bg-white text-neutral-900 shadow-[8px_8px_0px_0px_#18181b]'
-          : isDark
-          ? 'rounded-3xl border border-white/[0.1] bg-[#141418] text-white shadow-2xl'
-          : 'rounded-3xl border border-neutral-200 bg-white text-neutral-900 shadow-xl'
-      }`}>
+      <div className="relative w-full max-w-lg p-6 rounded-3xl border-2 border-neutral-900 bg-white text-neutral-900 shadow-[8px_8px_0px_0px_#18181b]">
         {/* Header */}
         <div className="flex items-center justify-between border-b pb-4 border-inherit">
           <div className="flex items-center gap-2.5">
-            <div className={`h-9 w-9 rounded-xl flex items-center justify-center font-bold ${
-              isBrutal ? 'bg-[#ffcc00] border-2 border-neutral-900' : 'bg-blue-600/20 text-blue-400'
-            }`}>
+            <div className="h-9 w-9 rounded-xl flex items-center justify-center font-bold bg-[#ffcc00] border-2 border-neutral-900 shadow-[2px_2px_0px_0px_#18181b]">
               <Sliders className="h-5 w-5" />
             </div>
             <div>
-              <h2 className="text-lg font-black tracking-tight">Audio & Visual Calibrator</h2>
+              <h2 className="text-lg font-black tracking-tight">Audio Calibrator</h2>
               <p className="text-xs opacity-60 font-mono">Web Audio Engine // Hardware Sidetone</p>
             </div>
           </div>
@@ -88,43 +76,8 @@ export const AudioSettingsModal = ({
 
         {/* Content */}
         <div className="mt-5 space-y-4">
-          {/* Theme Selector */}
-          <div className={`p-4 rounded-2xl ${
-            isBrutal ? 'bg-[#f5f4ee] border-2 border-neutral-900' : 'bg-white/[0.04]'
-          }`}>
-            <label className="text-xs font-mono font-bold uppercase opacity-70 flex items-center gap-2 mb-2">
-              <Palette className="h-3.5 w-3.5 text-[#ff5500]" />
-              Visual Theme
-            </label>
-            <div className="grid grid-cols-3 gap-2">
-              {[
-                { id: 'neo-brutal', label: '⚡ Neo-Brutalist' },
-                { id: 'apple-dark', label: ' Dark Studio' },
-                { id: 'apple-light', label: '☀️ Clean Light' },
-              ].map((th) => (
-                <button
-                  key={th.id}
-                  onClick={() => handleChange('theme', th.id as ThemeMode)}
-                  className={`py-2 px-2 text-xs font-bold rounded-xl transition-all ${
-                    localSettings.theme === th.id
-                      ? isBrutal
-                        ? 'bg-neutral-900 text-white border-2 border-neutral-900 shadow-[2px_2px_0px_0px_#ff5500]'
-                        : 'bg-white text-neutral-950 shadow-md font-semibold'
-                      : isBrutal
-                      ? 'bg-white border-2 border-neutral-900'
-                      : 'bg-white/[0.05] border border-white/[0.08] opacity-70'
-                  }`}
-                >
-                  {th.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
           {/* Sidetone Pitch */}
-          <div className={`p-4 rounded-2xl ${
-            isBrutal ? 'bg-[#f5f4ee] border-2 border-neutral-900' : 'bg-white/[0.04]'
-          }`}>
+          <div className="p-4 rounded-2xl bg-[#f5f4ee] border-2 border-neutral-900">
             <div className="flex items-center justify-between mb-2">
               <label className="text-xs font-mono font-bold uppercase opacity-70 flex items-center gap-2">
                 <Volume2 className="h-3.5 w-3.5 text-[#ff5500]" />
@@ -152,9 +105,7 @@ export const AudioSettingsModal = ({
 
           {/* Speed Controls: Farnsworth */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className={`p-4 rounded-2xl ${
-              isBrutal ? 'bg-[#f5f4ee] border-2 border-neutral-900' : 'bg-white/[0.04]'
-            }`}>
+            <div className="p-4 rounded-2xl bg-[#f5f4ee] border-2 border-neutral-900">
               <div className="flex items-center justify-between mb-1">
                 <label className="text-[11px] font-mono font-bold uppercase opacity-70">
                   Target Cadence
@@ -180,9 +131,7 @@ export const AudioSettingsModal = ({
               />
             </div>
 
-            <div className={`p-4 rounded-2xl ${
-              isBrutal ? 'bg-[#f5f4ee] border-2 border-neutral-900' : 'bg-white/[0.04]'
-            }`}>
+            <div className="p-4 rounded-2xl bg-[#f5f4ee] border-2 border-neutral-900">
               <div className="flex items-center justify-between mb-1">
                 <label className="text-[11px] font-mono font-bold uppercase opacity-70">
                   Spacing (Farnsworth)
@@ -204,9 +153,7 @@ export const AudioSettingsModal = ({
           </div>
 
           {/* Atmospheric HF Static */}
-          <div className={`p-4 rounded-2xl ${
-            isBrutal ? 'bg-[#f5f4ee] border-2 border-neutral-900' : 'bg-white/[0.04]'
-          }`}>
+          <div className="p-4 rounded-2xl bg-[#f5f4ee] border-2 border-neutral-900">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <Radio className="h-4 w-4 text-[#ff5500]" />
@@ -246,18 +193,14 @@ export const AudioSettingsModal = ({
           <div className="flex items-center gap-2.5">
             <button
               onClick={handleTestBeep}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold rounded-xl ${
-                isBrutal ? 'bg-[#ffcc00] border-2 border-neutral-900 shadow-[1px_1px_0px_0px_#18181b]' : 'bg-white/[0.08]'
-              }`}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold rounded-xl bg-[#ffcc00] border-2 border-neutral-900 shadow-[1px_1px_0px_0px_#18181b]"
             >
               <Zap className="h-3.5 w-3.5" />
               Test Tone
             </button>
             <button
               onClick={onClose}
-              className={`px-5 py-1.5 text-xs font-black rounded-xl ${
-                isBrutal ? 'bg-neutral-900 text-white border-2 border-neutral-900 shadow-[2px_2px_0px_0px_#ff5500]' : 'bg-blue-600 text-white'
-              }`}
+              className="px-5 py-1.5 text-xs font-black rounded-xl bg-neutral-900 text-white border-2 border-neutral-900 shadow-[2px_2px_0px_0px_#ff5500]"
             >
               Done
             </button>

@@ -39,8 +39,8 @@ export const KochTrainer = ({ settings, onStatsUpdate }: KochTrainerProps) => {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const sessionStartTime = useRef<number>(0);
 
-  const isBrutal = settings.theme === 'neo-brutal';
-  const isDark = settings.theme === 'apple-dark';
+  const isBrutal = true;
+  const isDark = false;
 
   // Load progress
   useEffect(() => {
