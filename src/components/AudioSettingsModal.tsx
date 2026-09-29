@@ -63,7 +63,7 @@ export const AudioSettingsModal = ({
             </div>
             <div>
               <h2 className="text-lg font-black tracking-tight">Audio Calibrator</h2>
-              <p className="text-xs opacity-60 font-mono">Web Audio Engine // Hardware Sidetone</p>
+              <p className="text-xs opacity-60 font-mono">Web Audio Engine • Hardware Sidetone</p>
             </div>
           </div>
           <button

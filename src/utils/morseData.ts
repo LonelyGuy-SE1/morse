@@ -155,7 +155,7 @@ export const KOCH_LESSONS: KochLesson[] = KOCH_ORDER.map((char, index) => {
   };
 });
 
-// Ham Radio Q-Codes (Essential for ASOC Exam & On-Air CW)
+// Ham Radio Q-Codes (Essential for On-Air CW & Telegraphy Training)
 export const Q_CODES: { code: string; meaning: string }[] = [
   { code: 'QRM', meaning: 'Your transmission is being interfered with (Man-made noise)' },
   { code: 'QRN', meaning: 'I am troubled by static / atmospheric noise' },
@@ -199,24 +199,25 @@ export const CW_ABBREVIATIONS: { abbrev: string; meaning: string }[] = [
   { abbrev: 'WX', meaning: 'Weather' },
 ];
 
-// Realistic Callsign Prefixes for ASOC Simulation
+// Realistic Callsign Prefixes for Telegraphy Practice
 export const CALLSIGN_PREFIXES = [
   'VU2', 'VU3', 'AT2', '4S7', '9N1', 'A52', 'S21',
   'W1', 'K6', 'JA1', 'DL3', 'G4', 'VK2', 'ZS6', 'PY2'
 ];
 
 export const CALLSIGN_SUFFIXES = [
-  'ABC', 'XYZ', 'CW', 'HAM', 'DX', 'RAD', 'ASO', 'WPC', 'NET', 'QRP', 'IND', 'DEL', 'MUM', 'BLR', 'HYD'
+  'ABC', 'XYZ', 'CW', 'HAM', 'DX', 'RAD', 'KEY', 'OSC', 'NET', 'QRP', 'IND', 'DEL', 'MUM', 'BLR', 'HYD'
 ];
 
 // Standard Plain Language Telegram Messages
-export const ASOC_PLAIN_MESSAGES: string[] = [
+export const SPEED_EXAM_PLAIN_MESSAGES: string[] = [
   'AMATEUR RADIO STATION OPERATING AT TWENTY METERS BAND REPORTS EXCELLENT PROPAGATION CONDITIONS WEATHER SUNNY TEMPERATURE TWENTY FIVE DEGREES SEVENTY THREE',
   'ALL OPERATORS PREPARING FOR ANNUAL FIELD DAY MUST CHECK EMERGENCY POWER GENERATORS DIPOLES AND VERTICAL ANTENNAS BEFORE COMMENCEMENT OF CONTEST',
   'INTERNATIONAL TELECOMMUNICATION UNION RECOMMENDS CONTINUOUS WAVE TELEGRAPHY PROFICIENCY FOR HIGH FREQUENCY EMERGENCY RADIO OPERATIONS',
   'SPECIAL EVENT STATION ACTIVE ON ALL HIGH FREQUENCY BANDS TO COMMEMORATE NATIONAL SCIENCE DAY PLEASE SEND YOUR QSL CARD VIA BUREAU',
   'PLEASE BE ADVISED SIGNAL ON SEVEN DECIMAL ZERO FIVE MEGAHERTZ SHOWS SLIGHT DRIFT PLEASE ADJUST SIDERTONE OSCILLATOR AND CONFIRM RECEPTION'
 ];
+export const ASOC_PLAIN_MESSAGES = SPEED_EXAM_PLAIN_MESSAGES;
 
 // Utility: Encode text to Morse code string (with spaces between elements and / between words)
 export function encodeToMorse(text: string): string {
@@ -244,7 +245,7 @@ export function decodeFromMorse(morse: string): string {
     .join(' ');
 }
 
-// Generator: Random 5-character groups (Military / ASOC Standard)
+// Generator: Random 5-character groups (Standard Telegraphy Cipher Groups)
 export function generateRandomGroups(
   groupCount: number = 5,
   allowedChars?: string[]

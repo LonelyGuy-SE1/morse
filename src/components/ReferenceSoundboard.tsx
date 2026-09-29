@@ -63,7 +63,7 @@ export const ReferenceSoundboard = ({ settings }: ReferenceSoundboardProps) => {
               <span className={`text-[10px] font-mono px-2 py-0.5 rounded-md font-bold ${
                 isBrutal ? 'bg-neutral-900 text-white' : 'bg-white/[0.08] text-neutral-300'
               }`}>
-                {settings.charWpm} WPM // {settings.pitch} Hz
+                {settings.charWpm} WPM • {settings.pitch} Hz
               </span>
             </div>
             <h2 className="text-xl font-black mt-0.5 tracking-tight">Interactive Soundboard</h2>

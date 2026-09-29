@@ -67,7 +67,7 @@ export function App() {
             <div className="flex items-center gap-2">
               <span className="inline-block h-2 w-2 rounded-full bg-[#ff5500]" />
               <span>CARRIER MONITOR</span>
-              <span>//</span>
+              <span className="opacity-40">•</span>
               <span>{settings.pitch} Hz Sine Oscillator</span>
             </div>
             <button

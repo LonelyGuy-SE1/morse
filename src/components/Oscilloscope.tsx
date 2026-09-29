@@ -101,7 +101,7 @@ export const Oscilloscope = ({
       <div className="absolute top-2.5 left-3.5 flex items-center gap-2 pointer-events-none z-10">
         <span className="inline-block w-2 h-2 rounded-full bg-[#ff5500]" />
         <span className="font-mono text-[10px] tracking-wider uppercase font-bold text-neutral-700">
-          CARRIER MONITOR // REAL-TIME SPECTRUM
+          CARRIER MONITOR • REAL-TIME SPECTRUM
         </span>
       </div>
       <canvas

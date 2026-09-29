@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+# Bingbot & Googlebot crawl rate friendly
+Crawl-delay: 1
+
+Sitemap: https://morse.lonelyguy.tech/sitemap.xml
+Host: https://morse.lonelyguy.tech

@@ -1,0 +1,18 @@
+{
+  "name": "Morse Academy - High-Speed CW Telegraphy Tutor",
+  "short_name": "Morse Academy",
+  "description": "High-Speed CW Telegraphy Tutor & Morse Code Training Platform featuring Koch Method & Farnsworth Timing.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f5f4ee",
+  "theme_color": "#ff5500",
+  "icons": [
+    {
+      "src": "/se1.jpg",
+      "sizes": "192x192 512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["education", "utilities", "productivity"]
+}
