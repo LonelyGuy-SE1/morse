@@ -22,8 +22,8 @@ interface KochTrainerProps {
 }
 
 export const KochTrainer = ({ settings, onStatsUpdate }: KochTrainerProps) => {
-  const [unlockedLevel, setUnlockedLevel] = useState<number>(1);
-  const [currentLevel, setCurrentLevel] = useState<number>(1);
+  const [unlockedLevel, setUnlockedLevel] = useState<number>(() => StorageService.getStats().kochLevelUnlocked || 1);
+  const [currentLevel, setCurrentLevel] = useState<number>(() => StorageService.getStats().kochLevelUnlocked || 1);
   const [lessonGroups, setLessonGroups] = useState<string[]>([]);
   const [userInput, setUserInput] = useState<string>('');
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
@@ -41,13 +41,6 @@ export const KochTrainer = ({ settings, onStatsUpdate }: KochTrainerProps) => {
 
   const isBrutal = true;
   const isDark = false;
-
-  // Load progress
-  useEffect(() => {
-    const stats = StorageService.getStats();
-    setUnlockedLevel(stats.kochLevelUnlocked || 1);
-    setCurrentLevel(stats.kochLevelUnlocked || 1);
-  }, []);
 
   const activeLesson = KOCH_LESSONS[currentLevel - 1] || KOCH_LESSONS[0];
 

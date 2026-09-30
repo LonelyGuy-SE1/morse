@@ -84,7 +84,7 @@ export const CopyTrainer = ({ settings, onStatsUpdate }: CopyTrainerProps) => {
     generateNextTarget();
   }, [sourceType, generateNextTarget]);
 
-  const handlePlayCurrent = async () => {
+  const handlePlayCurrent = useCallback(async () => {
     if (!currentItem) return;
 
     if (isPlaying) {
@@ -111,7 +111,7 @@ export const CopyTrainer = ({ settings, onStatsUpdate }: CopyTrainerProps) => {
         setCurrentCharIdx(-1);
       }
     );
-  };
+  }, [currentItem, isPlaying]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -122,7 +122,7 @@ export const CopyTrainer = ({ settings, onStatsUpdate }: CopyTrainerProps) => {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentItem, isPlaying]);
+  }, [handlePlayCurrent]);
 
   const handleCheck = () => {
     const cleanTarget = currentItem.replace(/\s+/g, '').toUpperCase();

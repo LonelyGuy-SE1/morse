@@ -61,7 +61,7 @@ export const StatsDashboard = ({ stats, onRefresh }: StatsDashboardProps) => {
   };
 
   const weakChars = Object.entries(stats.charAccuracyMap || {})
-    .filter(([_, data]) => data.attempts >= 3 && (data.correct / data.attempts) < 0.8)
+    .filter(([, data]) => data.attempts >= 3 && (data.correct / data.attempts) < 0.8)
     .map(([char, data]) => ({
       char,
       accuracy: Math.round((data.correct / data.attempts) * 100),
